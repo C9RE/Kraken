@@ -106,15 +106,44 @@ The Rigging panel on each ship lets anyone install mods without SSH'ing into the
 
 | Upload | Where it lands | Notes |
 |---|---|---|
-| `<modname>.zip` | `Mods/<modname>/` | Standard UE4SS distribution. Single-top-level-dir zips are flattened. |
-| `<modname>.lua` | `Mods/<modname>/Scripts/main.lua` | For loose Lua mods. |
-| `<modname>.dll` | `Mods/<modname>/dlls/main.dll` | For native UE4SS mods. |
+| `<name>.zip` (UE4SS folder shape) | `Binaries/Win64/ue4ss/Mods/<name>/` | Single-top-level-dir zips are auto-flattened. |
+| `<name>.zip` (contains `.pak` at top) | `Content/Paks/~mods/` (default) or `LogicMods/` | Picks up matching `.ucas`/`.utoc` siblings. Pick the target in the upload form. |
+| `<name>.lua` | `Mods/<name>/Scripts/main.lua` | Loose Lua mod. |
+| `<name>.dll` | `Mods/<name>/dlls/main.dll` (+ `enabled.txt`) | Native UE4SS mod. |
+| `<name>.pak` (+ optional `.ucas`/`.utoc`) | `Content/Paks/~mods/<name>.pak` (default) | Or `LogicMods/` if you select that target. |
 
-Enabled state is the source-of-truth `mods.txt` (`ModName : 0` / `: 1`) which UE4SS loads at server start. The hub patches that file in-place, preserving comments and line order.
+### What gets written
 
-UE4SS itself ships with the `windrose-dedicated-server-docker` image — no separate install step needed for the loader. Built-in UE4SS mods (`BPModLoaderMod`, `ConsoleEnablerMod`, etc.) appear in the Rigging list with a "built-in" badge; deleting them is gated behind a confirm.
+Enabled state is mirrored to **both** UE4SS registries — UE4SS 3.x maintains them in parallel:
 
-Restart the ship after installing or toggling — UE4SS only reads `mods.txt` at process start.
+- `Binaries/Win64/ue4ss/Mods/mods.json` — JSON array (`[{mod_name, mod_enabled}]`). Authoritative.
+- `Binaries/Win64/ue4ss/Mods/mods.txt` — `ModName : 0|1`, **CRLF**, with the `Keybinds` line pinned at the bottom under its `; Built-in keybinds, do not move up!` comment. The hub respects all of this.
+
+For native (DLL) mods the hub also writes `enabled.txt` inside the mod folder, which is the per-folder sentinel UE4SS expects for native mods.
+
+`.pak` mods can't be disabled in-place — they're loaded unconditionally by the engine. Remove the file (the hub's "remove" button does this) to disable.
+
+### UE4SS, in-image
+
+The upstream `uberdudepl/windrose-dedicated-server-docker` image already provisions UE4SS 3.0.1 (Beta) and the built-in UE4SS mods (`BPModLoaderMod`, `ConsoleEnablerMod`, `Keybinds`, etc.) on first SteamCMD run. You don't have to install UE4SS separately. Built-in mods are flagged in the table; deleting them is gated behind an extra confirm because removing `BPModLoaderMod` or `Keybinds` will break the loader.
+
+### WindrosePlus
+
+If `data/windrose_plus_data/` is present, the hub shows a "WindrosePlus detected" badge. The hub does not touch `UE4SS-settings.ini` — WindrosePlus needs specific values there (`HookProcessInternal=1`, `HookEngineTick=0`, `DefaultExecuteInGameThreadMethod=ProcessEvent`) and overwriting them crashes the dedicated server.
+
+### Restart the ship after edits
+
+UE4SS only reads `mods.json` / `mods.txt` at process start. The Rigging panel shows a warning when the ship is currently running — UE4SS may rewrite both files on next boot, possibly clobbering your changes. Stop the ship, edit, then start.
+
+### Sources & community
+
+- [UE4SS for Windrose — Nexus #43](https://www.nexusmods.com/windrose/mods/43) — canonical UE4SS build for the game.
+- [Windrose Mod Manager — Nexus #29](https://www.nexusmods.com/windrose/mods/29) — GUI-side prior art (dedicated-server-aware).
+- [WindrosePlus](https://github.com/HumanGenome/WindrosePlus) — server-side framework + admin features.
+- [WinterNode install guide](https://winternode.com/help/games/windrose/setup/how-to-add-mods) — clearest `mods.json` schema + Lua/DLL split.
+- [HypeServ install guide](https://hypeserv.com/en/blog/how-to-install-mods-on-a-windrose-server) — pak / `~mods` paths.
+- [BisectHosting UE4SS-on-Windrose article](https://help.bisecthosting.com/hc/en-us/articles/49353795082523-How-to-Install-UE4SS-on-a-Windrose-Server).
+- [UE4SS upstream](https://github.com/UE4SS-RE/RE-UE4SS).
 
 ## Roadmap
 

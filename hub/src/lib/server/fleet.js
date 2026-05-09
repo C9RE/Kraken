@@ -209,8 +209,22 @@ export async function create_ship(input) {
 	}
 	await copyFile(compose_src, join(path, 'docker-compose.yml'));
 
-	const port = input.port ?? (7777 + ships.length * 10);
+	// Pick ports that don't collide with any existing ship. Each ship runs
+	// with `network_mode: host`, so a clash means the new server fails to bind.
+	const used = new Set();
+	for (const s of ships) {
+		const e = await read_env(join(s.path, '.env'));
+		const p = parseInt(e.PORT || ''), q = parseInt(e.QUERYPORT || '');
+		if (Number.isFinite(p)) used.add(p);
+		if (Number.isFinite(q)) used.add(q);
+	}
+	let auto_port = 7777;
+	while (used.has(auto_port) || used.has(auto_port + 1)) auto_port += 10;
+	const port = input.port ?? auto_port;
 	const queryport = input.queryport ?? port + 1;
+	if (input.port && (used.has(port) || used.has(queryport))) {
+		throw new Error(`port ${used.has(port) ? port : queryport} is already used by another ship`);
+	}
 
 	const env = {
 		CONTAINER_NAME: `windrose-${input.id}`,
