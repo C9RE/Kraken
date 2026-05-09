@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import Rigging from '$lib/components/Rigging.svelte';
+	import Voyage from '$lib/components/Voyage.svelte';
 
 	let id = $derived(page.params.id);
 
@@ -233,6 +234,8 @@
 					</button>
 				</footer>
 			</article>
+
+			<Voyage {id} />
 
 			<article class="card">
 				<header class="card-head">
