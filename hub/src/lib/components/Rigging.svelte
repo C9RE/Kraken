@@ -86,7 +86,7 @@
 			const r = await fetch(`/api/fleet/${id}/mods`, { method: 'POST', body: fd });
 			const d = await r.json();
 			if (d.ok) {
-				flash(`installed: ${d.name} (${d.kind}) — ${d.action}`);
+				flash(`installed: ${d.name} (${d.kind}) - ${d.action}`);
 				upload_name = '';
 				if (file_input) file_input.value = '';
 				await load();
@@ -137,7 +137,7 @@
 				<span class="badge wp">⚓ WindrosePlus detected</span>
 			{/if}
 			{#if state.ship_active}
-				<span class="badge warn">▲ ship is running — UE4SS may overwrite changes on next boot; restart after edits</span>
+				<span class="badge warn">▲ ship is running - UE4SS may overwrite changes on next boot; restart after edits</span>
 			{/if}
 		</div>
 	{/if}
@@ -145,7 +145,7 @@
 	{#if !loading && !state?.ue4ss_present}
 		<div class="warn">
 			<strong>UE4SS hasn't been provisioned yet.</strong>
-			<p>Start the ship once so SteamCMD lays down the base game files (it will also bundle UE4SS), then come back here to install mods. Or upload a UE4SS release zip directly — it will create the directory.</p>
+			<p>Start the ship once so SteamCMD lays down the base game files (it will also bundle UE4SS), then come back here to install mods. Or upload a UE4SS release zip directly - it will create the directory.</p>
 		</div>
 	{/if}
 
@@ -228,7 +228,7 @@
 									{busy === `t-${m.name}` ? '…' : (m.enabled ? 'enabled' : 'disabled')}
 								</button>
 							{:else}
-								<span class="toggle on" title="pak files always load — remove to disable">
+								<span class="toggle on" title="pak files always load - remove to disable">
 									<span class="t-dot"></span>
 									always loaded
 								</span>
@@ -246,7 +246,7 @@
 		<p class="muted small">
 			UE4SS path: <code>{state.ue4ss_dir}</code><br />
 			Paks paths: <code>{state.logic_dir}</code> · <code>{state.asset_dir}</code><br />
-			restart the ship for changes to take effect — UE4SS reads <code>mods.json</code> at process start.
+			restart the ship for changes to take effect - UE4SS reads <code>mods.json</code> at process start.
 		</p>
 	{:else if state}
 		<p class="muted">no mods installed.</p>

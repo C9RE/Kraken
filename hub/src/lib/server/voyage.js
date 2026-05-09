@@ -1,32 +1,32 @@
-// Voyage settings — per-world gameplay/difficulty knobs.
+// Voyage settings - per-world gameplay/difficulty knobs.
 //
 // Lives in WorldDescription.json under each save profile. The on-disk shape
 // (verified against a real Windrose dedicated server save):
 //
-//   {
-//     "Version": 1,
-//     "WorldDescription": {
-//       "islandId": "<32-hex>",
-//       "WorldName": "Portal",
-//       "CreationTime": 6.39e+17,
-//       "WorldPresetType": "Easy" | "Medium" | "Hard" | "Custom",
-//       "WorldSettings": {
-//         "BoolParameters":  { "{\"TagName\": \"WDS.Parameter.Coop.SharedQuests\"}": true, ... },
-//         "FloatParameters": { "{\"TagName\": \"WDS.Parameter.MobHealthMultiplier\"}": 1, ... },
-//         "TagParameters":   { "{\"TagName\": \"WDS.Parameter.CombatDifficulty\"}":
-//                                { "TagName": "WDS.Parameter.CombatDifficulty.Normal" } }
-//       }
-//     }
-//   }
+// {
+// "Version": 1,
+// "WorldDescription": {
+// "islandId": "<32-hex>",
+// "WorldName": "Portal",
+// "CreationTime": 6.39e+17,
+// "WorldPresetType": "Easy" | "Medium" | "Hard" | "Custom",
+// "WorldSettings": {
+// "BoolParameters":  { "{\"TagName\": \"WDS.Parameter.Coop.SharedQuests\"}": true, ... },
+// "FloatParameters": { "{\"TagName\": \"WDS.Parameter.MobHealthMultiplier\"}": 1, ... },
+// "TagParameters":   { "{\"TagName\": \"WDS.Parameter.CombatDifficulty\"}":
+// { "TagName": "WDS.Parameter.CombatDifficulty.Normal" } }
+// }
+// }
+// }
 //
 // Things that will trip you up writing this back:
-//   - Keys are STRINGS containing JSON  ("{\"TagName\": \"X\"}"). Don't try to
-//     "fix" them; the game parses them that way.
-//   - Editing any value in a non-Custom preset flips WorldPresetType to Custom
-//     on next load (game-side behaviour, not ours). The hub honours this by
-//     setting WorldPresetType = Custom whenever the user touches a slider.
-//   - The container MUST be stopped before writing — the game holds the file
-//     and will overwrite our changes on its next world flush.
+// - Keys are STRINGS containing JSON  ("{\"TagName\": \"X\"}"). Don't try to
+// "fix" them; the game parses them that way.
+// - Editing any value in a non-Custom preset flips WorldPresetType to Custom
+// on next load (game-side behaviour, not ours). The hub honours this by
+// setting WorldPresetType = Custom whenever the user touches a slider.
+// - The container MUST be stopped before writing - the game holds the file
+// and will overwrite our changes on its next world flush.
 
 import { readFile, writeFile, readdir, stat } from 'fs/promises';
 import { join } from 'path';
@@ -34,7 +34,7 @@ import { existsSync } from 'fs';
 import { get_ship } from './fleet.js';
 
 // Where save profiles live, relative to a ship's `data/`. Two RocksDB layouts
-// have been seen in the wild — `RocksDB` (older) and `RocksDB_v2` (newer);
+// have been seen in the wild - `RocksDB` (older) and `RocksDB_v2` (newer);
 // we walk both.
 const PROFILE_ROOTS = ['R5/Saved/SaveProfiles/Default'];
 const ROCKSDB_DIRS = ['RocksDB_v2', 'RocksDB'];
@@ -56,7 +56,7 @@ export const BOOL_KNOBS = /** @type {const} */ ([
 	{ tag: 'WDS.Parameter.EasyExplore',       label: 'easy explore'  },
 ]);
 
-// Built-in difficulty presets — values lifted from Windrose's own preset table
+// Built-in difficulty presets - values lifted from Windrose's own preset table
 // so "Medium" puts every multiplier back to 1.0.
 export const PRESETS = {
 	Easy: {
@@ -109,7 +109,7 @@ export const PRESETS = {
 	},
 };
 
-// ─── Tag-key helpers (the "{\"TagName\":\"X\"}" wrapping) ───────────────────
+// Tag-key helpers (the "{\"TagName\":\"X\"}" wrapping) 
 
 const tag_key = (tag) => `{"TagName": "${tag}"}`;
 function find_tag_value(obj, tag) {
@@ -136,7 +136,7 @@ function set_tag_value(obj, tag, value) {
 	obj[key] = value;
 }
 
-// ─── Walk worlds ────────────────────────────────────────────────────────────
+// Walk worlds 
 
 /** @param {string} ship_path */
 async function locate_world_files(ship_path) {
@@ -199,7 +199,7 @@ function combat_to_tag_value(combat) {
 	return { TagName: `WDS.Parameter.CombatDifficulty.${safe}` };
 }
 
-// ─── Public API ─────────────────────────────────────────────────────────────
+// Public API 
 
 /** @param {string} ship_id */
 export async function list_worlds(ship_id) {
@@ -236,7 +236,7 @@ export async function list_worlds(ship_id) {
 /**
  * Patch a world's settings. Caller passes `island_id` (or `path`) to identify
  * which world to write. The hub refuses to write while the ship is running
- * unless `force: true` — the game holds the file and will clobber our edits.
+ * unless `force: true` - the game holds the file and will clobber our edits.
  *
  * @param {string} ship_id
  * @param {{
@@ -251,11 +251,11 @@ export async function update_world(ship_id, input) {
 	const ship = await get_ship(ship_id);
 	if (!ship) throw new Error('no such ship');
 	if (ship.active && !input.force) {
-		throw new Error('ship is running — stop it first or pass {force:true} (the game will overwrite your edits otherwise)');
+		throw new Error('ship is running - stop it first or pass {force:true} (the game will overwrite your edits otherwise)');
 	}
 
 	const files = await locate_world_files(ship.path);
-	if (files.length === 0) throw new Error('no worlds found — start the ship at least once so it lays down a save');
+	if (files.length === 0) throw new Error('no worlds found - start the ship at least once so it lays down a save');
 
 	const target = input.path
 		? files.find(f => f.path === input.path)
@@ -278,7 +278,7 @@ export async function update_world(ship_id, input) {
 		const bools  = ws.BoolParameters  || (ws.BoolParameters  = {});
 		const tags   = ws.TagParameters   || (ws.TagParameters   = {});
 
-		// Touching any value flips the preset to Custom — that's how the game
+		// Touching any value flips the preset to Custom - that's how the game
 		// itself behaves. The user can still pick a preset explicitly.
 		let touched = false;
 

@@ -58,7 +58,7 @@
 		world.combat = p.combat;
 		world.floats = { ...p.floats };
 		world.bools = { ...p.bools };
-		flash(`${name.toLowerCase()} preset loaded — review then save`);
+		flash(`${name.toLowerCase()} preset loaded - review then save`);
 	}
 
 	async function save() {
@@ -88,7 +88,7 @@
 
 	function fmt_float(v) {
 		const n = Number(v);
-		return Number.isFinite(n) ? n.toFixed(2) : '—';
+		return Number.isFinite(n) ? n.toFixed(2) : '-';
 	}
 </script>
 
@@ -96,7 +96,7 @@
 	<header class="card-head">
 		<h2 class="serif">voyage</h2>
 		<p>
-			per-world gameplay — combat preset, mob/ship multipliers, coop scaling, easy explore.
+			per-world gameplay - combat preset, mob/ship multipliers, coop scaling, easy explore.
 			edits land in <code>WorldDescription.json</code>; the game must be stopped to save.
 		</p>
 	</header>
@@ -153,9 +153,9 @@
 							onclick={() => apply_preset_local(p)}>
 							<span class="p-name serif">{p.toLowerCase()}</span>
 							<span class="p-desc">
-								{p === 'Easy'   ? 'forgiving — strong ship, weak mobs' :
-								 p === 'Medium' ? 'baseline — every multiplier 1.0×'   :
-								                  'hostile — buffed mobs, fragile ship'}
+								{p === 'Easy'   ? 'forgiving - strong ship, weak mobs' :
+								 p === 'Medium' ? 'baseline - every multiplier 1.0×'   :
+								                  'hostile - buffed mobs, fragile ship'}
 							</span>
 						</button>
 					{/each}
@@ -192,7 +192,7 @@
 							<input type="range" min={k.min} max={k.max} step={k.step}
 								bind:value={world.floats[k.tag]}
 								onchange={() => world.preset = 'Custom'} />
-							<span class="s-range mono">{k.min} – {k.max}</span>
+							<span class="s-range mono">{k.min} - {k.max}</span>
 						</label>
 					{/each}
 				</div>
@@ -217,7 +217,7 @@
 
 			<footer class="form-foot">
 				<span class="hint mono">
-					{state.ship_active ? '▲ ship running — stop first' : '○ ready to save'}
+					{state.ship_active ? '▲ ship running - stop first' : '○ ready to save'}
 				</span>
 				<button class="btn btn-primary" disabled={busy === 'save' || state.ship_active} onclick={save}>
 					{busy === 'save' ? 'saving…' : 'Save voyage'}

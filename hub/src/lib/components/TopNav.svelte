@@ -3,8 +3,9 @@
 	import { page } from '$app/state';
 	let path = $derived(page.url?.pathname ?? '');
 	const LINKS = [
-		{ href: '/',    label: 'fleet' },
-		{ href: '/new', label: 'drydock' },
+		{ href: '/',         label: 'fleet' },
+		{ href: '/new',      label: 'drydock' },
+		{ href: '/settings', label: 'settings' },
 	];
 	function is_active(href) {
 		if (href === '/') return path === '/';

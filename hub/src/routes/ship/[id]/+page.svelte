@@ -17,7 +17,7 @@
 	let logs = $state('');
 	let logs_lines = $state(200);
 
-	// Editable .env state — separate from ship.env so we know what's dirty
+	// Editable .env state - separate from ship.env so we know what's dirty
 	let env_draft = $state(/** @type {Record<string,string>} */ ({}));
 	let env_loaded_for = $state('');
 
@@ -155,7 +155,7 @@
 	}
 	function fmt_date(epoch) { return new Date(epoch * 1000).toLocaleString(); }
 	function fmt_uptime(secs) {
-		if (!secs) return '—';
+		if (!secs) return '-';
 		const h = Math.floor(secs / 3600);
 		const m = Math.floor((secs % 3600) / 60);
 		return h > 0 ? `${h}h ${m}m` : `${m}m`;
@@ -202,7 +202,7 @@
 	{#if toast}<p class="toast">{toast}</p>{/if}
 
 	<section class="grid">
-		<!-- LEFT — settings -->
+		<!-- LEFT - settings -->
 		<div class="col">
 			<article class="card">
 				<header class="card-head">
@@ -263,7 +263,7 @@
 			</article>
 		</div>
 
-		<!-- RIGHT — mods, backups, logs -->
+		<!-- RIGHT - mods, backups, logs -->
 		<div class="col">
 			<Rigging {id} />
 

@@ -57,7 +57,7 @@
 	<p class="kicker italic">commission a new vessel</p>
 	<h1 class="serif">drydock</h1>
 	<p class="hero-sub">
-		give the ship a name, pick a port, set the headcount. the hub will lay her keel —
+		give the ship a name, pick a port, set the headcount. the hub will lay her keel -
 		writing a docker-compose stack you can edit later from her bridge.
 	</p>
 </section>

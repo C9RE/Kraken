@@ -41,10 +41,10 @@
 	</header>
 
 	<dl class="meta">
-		<div><dt>image</dt><dd class="mono">{ship.image_tag || '—'}</dd></div>
+		<div><dt>image</dt><dd class="mono">{ship.image_tag || '-'}</dd></div>
 		<div><dt>port</dt><dd class="mono">:{ship.port}</dd></div>
 		<div><dt>cap</dt><dd class="mono">{ship.max_players}</dd></div>
-		<div><dt>invite</dt><dd class="mono">{ship.invite_code || '—'}</dd></div>
+		<div><dt>invite</dt><dd class="mono">{ship.invite_code || '-'}</dd></div>
 	</dl>
 
 	<footer class="actions">

@@ -3,23 +3,23 @@
 // UE4SS 3.x maintains TWO registries side-by-side, and we treat them as a
 // single transaction:
 //
-//   data/R5/Binaries/Win64/ue4ss/Mods/mods.json   ← authoritative for 3.x
-//                                  /mods.txt      ← legacy mirror, CRLF, with a
-//                                                   pinned `Keybinds : 1` block
-//                                                   the loader requires last
+// data/R5/Binaries/Win64/ue4ss/Mods/mods.json   ← authoritative for 3.x
+// /mods.txt      ← legacy mirror, CRLF, with a
+// pinned `Keybinds : 1` block
+// the loader requires last
 //
 // In addition to UE4SS Lua / DLL mods we also handle Unreal pak mods:
 //
-//   data/R5/Content/Paks/LogicMods/<Name>.pak     ← blueprint logic mods
-//                              /~mods/<Name>.pak  ← asset replacement (with
-//                                                   optional .ucas/.utoc siblings)
+// data/R5/Content/Paks/LogicMods/<Name>.pak     ← blueprint logic mods
+// /~mods/<Name>.pak  ← asset replacement (with
+// optional .ucas/.utoc siblings)
 //
 // References:
-//   - https://github.com/UE4SS-RE/RE-UE4SS  (UE4SS itself)
-//   - https://www.nexusmods.com/windrose/mods/43  (Windrose UE4SS build)
-//   - https://github.com/HumanGenome/WindrosePlus
-//   - https://winternode.com/help/games/windrose/setup/how-to-add-mods
-//   - https://hypeserv.com/en/blog/how-to-install-mods-on-a-windrose-server
+// - https://github.com/UE4SS-RE/RE-UE4SS  (UE4SS itself)
+// - https://www.nexusmods.com/windrose/mods/43  (Windrose UE4SS build)
+// - https://github.com/HumanGenome/WindrosePlus
+// - https://winternode.com/help/games/windrose/setup/how-to-add-mods
+// - https://hypeserv.com/en/blog/how-to-install-mods-on-a-windrose-server
 
 import { readFile, writeFile, mkdir, readdir, stat, rm, rename, unlink, copyFile } from 'fs/promises';
 import { spawn } from 'child_process';
@@ -43,7 +43,7 @@ const BUILTIN = new Set([
 // `Keybinds : 1` MUST stay pinned at the bottom of mods.txt under its own
 // comment. UE4SS will throw or behave incorrectly if it's moved. We treat the
 // entire trailing comment+entry block as a single pinned tail.
-// Match the entire trailing block — any number of CRLF/LF blank lines, the
+// Match the entire trailing block - any number of CRLF/LF blank lines, the
 // comment line, and the Keybinds entry. Anchoring on `\r?\n` (rather than just
 // `\n`) ensures we consume the full CRLF; a bare `\n` anchor would leave an
 // orphan `\r` behind that lands in the body's last line on the next write.
@@ -51,7 +51,7 @@ const KEYBINDS_TAIL_RE = /(?:\r?\n)+;\s*Built-in keybinds[^\r\n]*\r?\n\s*Keybind
 
 const PAK_SIBLINGS = ['.pak', '.ucas', '.utoc'];
 
-// ─── Path helpers ───────────────────────────────────────────────────────────
+// Path helpers 
 
 /** @param {{path: string}} ship */
 function ue4ss_mods_dir(ship) {
@@ -68,12 +68,12 @@ function asset_mods_dir(ship) {
 	return join(ship.path, 'data', 'R5', 'Content', 'Paks', '~mods');
 }
 
-/** @param {{path: string}} ship — WindrosePlus runtime artefact directory */
+/** @param {{path: string}} ship - WindrosePlus runtime artefact directory */
 function windrose_plus_marker(ship) {
 	return join(ship.path, 'data', 'windrose_plus_data');
 }
 
-// ─── mods.txt — CRLF-preserving parser/writer ───────────────────────────────
+// mods.txt - CRLF-preserving parser/writer 
 
 /**
  * Parse mods.txt while preserving the verbatim file structure so we can write
@@ -126,7 +126,7 @@ async function read_mods_txt(path) {
 async function set_mod_enabled_txt(path, name, on) {
 	let { eol, lines, present, keybinds_tail } = await read_mods_txt(path);
 	if (!present) {
-		// Match the in-the-wild UE4SS skeleton — empty body, then the pinned tail.
+		// Match the in-the-wild UE4SS skeleton - empty body, then the pinned tail.
 		eol = '\r\n';
 		lines = [];
 		keybinds_tail = `; Built-in keybinds, do not move up!${eol}Keybinds : 1${eol}`;
@@ -171,7 +171,7 @@ async function remove_mod_from_txt(path, name) {
 	await writeFile(path, final);
 }
 
-// ─── mods.json — authoritative for UE4SS 3.x ────────────────────────────────
+// mods.json - authoritative for UE4SS 3.x 
 
 /** @param {string} path @returns {Promise<Array<{mod_name: string, mod_enabled: boolean}>>} */
 async function read_mods_json(path) {
@@ -179,7 +179,7 @@ async function read_mods_json(path) {
 		const raw = await readFile(path, 'utf-8');
 		const parsed = JSON.parse(raw);
 		if (Array.isArray(parsed)) return parsed.filter(e => e && typeof e.mod_name === 'string');
-	} catch { /* missing or malformed — start fresh */ }
+	} catch { /* missing or malformed - start fresh */ }
 	return [];
 }
 
@@ -203,7 +203,7 @@ async function remove_mod_from_json(path, name) {
 	await write_mods_json(path, entries.filter(e => e.mod_name !== name));
 }
 
-// ─── enabled.txt sentinel for native (DLL) mods ─────────────────────────────
+// enabled.txt sentinel for native (DLL) mods 
 
 /** @param {string} mod_dir @param {boolean} on */
 async function set_dll_enabled_sentinel(mod_dir, on) {
@@ -217,7 +217,7 @@ async function set_dll_enabled_sentinel(mod_dir, on) {
 	}
 }
 
-// ─── Public API ─────────────────────────────────────────────────────────────
+// Public API 
 
 /**
  * @param {string} ship_id
@@ -265,7 +265,7 @@ export async function list_mods(ship_id) {
 		}
 	}
 
-	// Pak mods — LogicMods/ and ~mods/ are flat directories of .pak files.
+	// Pak mods - LogicMods/ and ~mods/ are flat directories of .pak files.
 	for (const [kind, dir] of /** @type {const} */ ([['logic-pak', logic_dir], ['asset-pak', asset_dir]])) {
 		if (!existsSync(dir)) continue;
 		const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
@@ -322,9 +322,9 @@ export async function toggle_mod(ship_id, name, kind, on) {
 	if (!ship) throw new Error('no such ship');
 
 	if (kind !== 'ue4ss') {
-		// .pak mods aren't toggleable — UE4SS / Unreal loads anything in the
+		// .pak mods aren't toggleable - UE4SS / Unreal loads anything in the
 		// directory unconditionally. Surface this clearly.
-		throw new Error('pak mods cannot be disabled — remove the file to disable');
+		throw new Error('pak mods cannot be disabled - remove the file to disable');
 	}
 
 	const dir = ue4ss_mods_dir(ship);
@@ -397,7 +397,7 @@ export async function install_mod(ship_id, input) {
 	const buf = input.bytes instanceof Buffer ? input.bytes
 		: Buffer.from(input.bytes instanceof ArrayBuffer ? input.bytes : input.bytes.buffer);
 
-	// Direct-extension installs ────────────────────────────────────────────
+	// Direct-extension installs 
 	if (ext === '.lua' || ext === '.dll') {
 		return install_ue4ss_loose(ship, name, ext, buf, input.enable !== false);
 	}
@@ -406,7 +406,7 @@ export async function install_mod(ship_id, input) {
 		return install_pak_single(ship, name, ext, buf, kind);
 	}
 
-	// Zip — introspect to choose target ─────────────────────────────────────
+	// Zip - introspect to choose target 
 	if (ext === '.zip') {
 		return install_zip(ship, name, buf, input.kind, input.enable !== false);
 	}

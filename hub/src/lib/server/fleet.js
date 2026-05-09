@@ -1,12 +1,12 @@
-// Fleet management — multiple Windrose dedicated server instances.
+// Fleet management - multiple Windrose dedicated server instances.
 //
 // Each "ship" is a docker-compose stack on disk:
-//   $KRAKEN_FLEET_ROOT/<id>/
-//     ├── docker-compose.yml      copied from the Kraken template
-//     ├── .env                    generated from form data, edited via UI
-//     ├── data/                   game files + saves
-//     ├── steam-home/             Wine prefix + SteamCMD cache
-//     └── backups/                save tarballs
+// $KRAKEN_FLEET_ROOT/<id>/
+// ├ docker-compose.yml      copied from the Kraken template
+// ├ .env                    generated from form data, edited via UI
+// ├ data/                   game files + saves
+// ├ steam-home/             Wine prefix + SteamCMD cache
+// └ backups/                save tarballs
 //
 // The hub itself only needs network reach to a Docker daemon (the host's
 // /var/run/docker.sock is the simplest deployment) and write access to
@@ -46,7 +46,7 @@ async function write_index(ships) {
 	await writeFile(FLEET_INDEX, JSON.stringify(ships, null, 2));
 }
 
-// ─── Compose helpers ────────────────────────────────────────────────────────
+// Compose helpers 
 
 /**
  * @param {string} cwd
@@ -86,7 +86,7 @@ function container_state(container) {
 	});
 }
 
-// ─── .env parse / write (preserve order + comments) ─────────────────────────
+// .env parse / write (preserve order + comments) 
 
 /** @param {string} path @returns {Promise<Record<string, string>>} */
 export async function read_env(path) {
@@ -123,7 +123,7 @@ async function write_env(path, updates) {
 	await writeFile(path, next.join('\n').replace(/\n+$/, '') + '\n');
 }
 
-// ─── Public API ─────────────────────────────────────────────────────────────
+// Public API 
 
 export async function list_ships() {
 	const ships = await read_index();
@@ -196,7 +196,7 @@ export async function create_ship(input) {
 	if (ships.find(s => s.id === input.id)) throw new Error(`ship "${input.id}" already exists`);
 
 	const path = join(FLEET_ROOT, input.id);
-	if (existsSync(path)) throw new Error(`directory ${path} already present — refusing to overwrite`);
+	if (existsSync(path)) throw new Error(`directory ${path} already present - refusing to overwrite`);
 
 	await mkdir(path, { recursive: true });
 	for (const sub of ['data', 'steam-home', 'backups']) {
