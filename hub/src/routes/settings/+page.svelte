@@ -1,4 +1,6 @@
 <script>
+	import { goto } from '$app/navigation';
+
 	/** @type {any} */
 	let s = $state(null);
 	let loading = $state(true);
@@ -7,6 +9,22 @@
 	let toast = $state('');
 	/** @type {Array<{step: string, ok: boolean, output: string}>} */
 	let last_log = $state([]);
+
+	// Auth state
+	/** @type {any} */
+	let auth = $state(null);
+	let pin_busy = $state(false);
+	let pin_new = $state('');
+	let pin_confirm = $state('');
+	let pin_current = $state('');
+	let pin_msg = $state('');
+
+	async function load_auth() {
+		try {
+			const r = await fetch('/api/auth', { cache: 'no-store' });
+			auth = await r.json();
+		} catch {}
+	}
 
 	async function load() {
 		try {
@@ -18,6 +36,59 @@
 		} finally {
 			loading = false;
 		}
+		load_auth();
+	}
+
+	function pin_flash(m) { pin_msg = m; setTimeout(() => pin_msg = '', 5000); }
+
+	async function pin_enable_or_change() {
+		if (!/^[0-9]{4,12}$/.test(pin_new)) { pin_flash('PIN must be 4 to 12 digits'); return; }
+		if (pin_new !== pin_confirm) { pin_flash('PINs do not match'); return; }
+		pin_busy = true;
+		try {
+			const action = auth?.has_pin ? 'change' : 'enable';
+			const body = action === 'change'
+				? { action, pin: pin_new, current_pin: pin_current }
+				: { action, pin: pin_new };
+			const r = await fetch('/api/auth/configure', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(body),
+			});
+			const d = await r.json();
+			if (d.ok) {
+				pin_flash(action === 'change' ? 'PIN updated' : 'PIN auth enabled');
+				pin_new = pin_confirm = pin_current = '';
+				await load_auth();
+			} else {
+				pin_flash(`failed: ${d.error}`);
+			}
+		} finally { pin_busy = false; }
+	}
+
+	async function pin_disable() {
+		if (!confirm('Disable PIN login? Anyone on the network will be able to access the hub.')) return;
+		pin_busy = true;
+		try {
+			const r = await fetch('/api/auth/configure', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ action: 'disable', current_pin: pin_current }),
+			});
+			const d = await r.json();
+			if (d.ok) {
+				pin_flash('PIN auth disabled');
+				pin_current = '';
+				await load_auth();
+			} else {
+				pin_flash(`failed: ${d.error}`);
+			}
+		} finally { pin_busy = false; }
+	}
+
+	async function logout() {
+		await fetch('/api/auth', { method: 'DELETE' });
+		goto('/login');
 	}
 
 	$effect(() => {
@@ -145,6 +216,61 @@
 				</details>
 			{/if}
 		{/if}
+	</article>
+
+	<!-- PIN auth -->
+	<article class="card">
+		<header class="card-head">
+			<h2 class="serif">PIN login</h2>
+			<p>
+				lock the hub behind a 4 to 12 digit PIN. off by default.
+				stored hashed (scrypt) at <code>{s.repo_dir ? `$KRAKEN_FLEET_ROOT/auth.json` : 'auth.json'}</code>.
+				rate limited: 5 wrong PINs in 15 minutes triggers a 15 minute lockout per IP.
+			</p>
+		</header>
+
+		<div class="auth-state">
+			<span class="badge" class:on={auth?.enabled}>{auth?.enabled ? 'enabled' : 'disabled'}</span>
+			{#if auth?.enabled && auth?.authed}
+				<span class="badge on">signed in</span>
+				<button class="btn btn-ghost auth-logout" onclick={logout}>Sign out</button>
+			{/if}
+		</div>
+
+		{#if pin_msg}<p class="toast">{pin_msg}</p>{/if}
+
+		<div class="auth-grid">
+			<label>
+				<span>{auth?.has_pin ? 'new PIN' : 'PIN'}</span>
+				<input type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="new-password"
+					bind:value={pin_new} placeholder="4 to 12 digits" disabled={pin_busy} />
+			</label>
+			<label>
+				<span>confirm</span>
+				<input type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="new-password"
+					bind:value={pin_confirm} placeholder="repeat the PIN" disabled={pin_busy} />
+			</label>
+			{#if auth?.has_pin}
+				<label>
+					<span>current PIN</span>
+					<input type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password"
+						bind:value={pin_current} placeholder="required to change/disable" disabled={pin_busy} />
+				</label>
+			{/if}
+		</div>
+
+		<div class="action-row">
+			<button class="btn btn-primary"
+				disabled={pin_busy || !pin_new || !pin_confirm}
+				onclick={pin_enable_or_change}>
+				{pin_busy ? 'saving...' : (auth?.has_pin ? 'Change PIN' : 'Enable PIN login')}
+			</button>
+			{#if auth?.has_pin}
+				<button class="btn btn-danger" disabled={pin_busy} onclick={pin_disable}>
+					Disable PIN login
+				</button>
+			{/if}
+		</div>
 	</article>
 
 	<!-- System info -->

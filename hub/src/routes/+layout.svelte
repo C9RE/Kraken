@@ -1,27 +1,32 @@
 <script>
 	import '../app.css';
 	import TopNav from '$lib/components/TopNav.svelte';
+	import { page } from '$app/state';
 	let { children } = $props();
+	let chrome = $derived(page.url?.pathname !== '/login');
 </script>
 
 <svelte:head><title>Kraken hub</title></svelte:head>
 
-<div class="app">
-	<TopNav />
+<div class="app" class:bare={!chrome}>
+	{#if chrome}<TopNav />{/if}
 	<main>
 		{@render children?.()}
 	</main>
-	<footer class="botbar mono">
-		<span>Kraken hub</span>
-		<span class="sep">·</span>
-		<span>Windrose dedicated server fleet</span>
-		<span class="sep">·</span>
-		<a href="https://github.com/C9RE/Kraken">github.com/C9RE/Kraken</a>
-	</footer>
+	{#if chrome}
+		<footer class="botbar mono">
+			<span>Kraken hub</span>
+			<span class="sep">.</span>
+			<span>Windrose dedicated server fleet</span>
+			<span class="sep">.</span>
+			<a href="https://github.com/C9RE/Kraken">github.com/C9RE/Kraken</a>
+		</footer>
+	{/if}
 </div>
 
 <style>
 	.app { display: flex; flex-direction: column; min-height: 100dvh; }
+	.app.bare main { padding: 0; max-width: none; }
 	main { flex: 1; padding: 32px 24px 48px; max-width: 1200px; width: 100%; margin: 0 auto; box-sizing: border-box; }
 	.botbar {
 		display: flex;
