@@ -1,0 +1,143 @@
+@import 'tailwindcss';
+
+/* Kraken Hub — fleet manager for Windrose dedicated servers.
+   Same brass + warm-tan palette as the in-game admin tool, lifted from
+   playwindrose.com so the whole product line shares a single voice.
+*/
+
+@theme {
+	--color-bg: #131212;
+	--color-surface: #1a1919;
+	--color-surface-2: #1f1f20;
+	--color-surface-3: #232123;
+
+	--color-ink: #eeedee;
+	--color-ink-2: #d5d3c7;
+	--color-ink-3: #bbb9af;
+	--color-ink-4: #676767;
+
+	--color-border: rgba(204, 185, 157, 0.10);
+	--color-border-strong: rgba(204, 185, 157, 0.22);
+	--color-border-focus: rgba(204, 185, 157, 0.45);
+
+	--color-accent: #9a7f3e;
+	--color-accent-bright: #ccb99d;
+	--color-accent-soft: rgba(204, 185, 157, 0.10);
+
+	--color-deep: #2a4a52;
+	--color-deep-soft: rgba(42, 74, 82, 0.18);
+	--color-sage: #7b9c83;
+	--color-rust: #c0704a;
+	--color-crimson: #b04d3e;
+
+	--font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+	--font-body: 'PT Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+	--font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=PT+Sans:wght@400;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+* {
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-border-strong) transparent;
+	-webkit-tap-highlight-color: transparent;
+}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-ink-3); }
+
+html { background: var(--color-bg); color-scheme: dark; }
+body {
+	background:
+		radial-gradient(ellipse 100% 50% at 50% -10%, rgba(204, 185, 157, 0.05) 0%, transparent 60%),
+		var(--color-bg);
+	color: var(--color-ink);
+	font-family: var(--font-body);
+	font-size: 14px;
+	line-height: 1.6;
+	min-height: 100dvh;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	margin: 0;
+}
+
+.serif { font-family: var(--font-display); letter-spacing: -0.005em; }
+.italic { font-style: italic; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.label {
+	font-family: var(--font-body);
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.18em;
+	color: var(--color-accent);
+	font-weight: 700;
+}
+.kicker {
+	font-family: var(--font-display);
+	font-style: italic;
+	font-size: 13px;
+	color: var(--color-ink-3);
+	margin: 0;
+}
+
+a { color: var(--color-accent-bright); text-decoration: none; }
+a:hover { color: var(--color-ink); }
+
+button { font: inherit; cursor: pointer; }
+input, select, textarea {
+	font: inherit;
+	color: var(--color-ink);
+	background: var(--color-surface);
+	border: 1px solid var(--color-border-strong);
+	border-radius: 2px;
+	padding: 8px 10px;
+	outline: none;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--color-border-focus); }
+label { display: flex; flex-direction: column; gap: 4px; }
+label span { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-ink-3); }
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 8px 16px;
+	font-family: var(--font-body);
+	font-weight: 700;
+	font-size: 11px;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--color-accent-bright);
+	background: transparent;
+	border: 1px solid var(--color-accent);
+	border-radius: 2px;
+	transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.btn:hover:not(:disabled) { background: var(--color-accent-soft); color: var(--color-ink); border-color: var(--color-accent-bright); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-primary { background: var(--color-accent); color: #131212; }
+.btn-primary:hover:not(:disabled) { background: var(--color-accent-bright); color: #131212; }
+.btn-danger { color: var(--color-crimson); border-color: var(--color-crimson); }
+.btn-danger:hover:not(:disabled) { background: rgba(176, 77, 62, 0.12); color: var(--color-ink); }
+.btn-ghost { border-color: var(--color-border-strong); color: var(--color-ink-2); }
+
+.card {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 2px;
+	padding: 22px 24px;
+}
+.hairline { border-color: var(--color-border); }
+
+.dot {
+	display: inline-block;
+	width: 8px; height: 8px;
+	border-radius: 50%;
+	background: var(--color-ink-4);
+}
+.dot.on { background: var(--color-sage); box-shadow: 0 0 6px rgba(123, 156, 131, 0.5); }
+.dot.warn { background: var(--color-rust); }
+.dot.bad { background: var(--color-crimson); }
