@@ -9,8 +9,9 @@ The hub builds on the [Kraken docker image](../README.md) (a fork of [UberDudePL
 
 ## Features
 
-- **Drydock**: spin up new dedicated server instances with one form.
+- **Drydock**: spin up new dedicated server instances with one form. No CLI required.
 - **Bridge**: edit `.env` settings (server name, invite code, max players, ports, password, image tag, notification webhooks…) per ship.
+- **Rigging**: drag-and-drop mod installer — accepts `.zip` (UE4SS layout), `.lua`, or `.dll`. Toggles enabled state in `mods.txt`. Removes mods cleanly.
 - **Lifecycle**: start, stop, restart, refit (pull + restart), scuttle.
 - **Backups**: hot-tar saves into the ship's own `backups/` directory.
 - **Logs**: tail container logs straight from the dashboard.
@@ -99,13 +100,29 @@ The Windrose dedicated server itself needs an AVX-capable CPU and IPv6 enabled a
 
 ---
 
+## Mods
+
+The Rigging panel on each ship lets anyone install mods without SSH'ing into the host.
+
+| Upload | Where it lands | Notes |
+|---|---|---|
+| `<modname>.zip` | `Mods/<modname>/` | Standard UE4SS distribution. Single-top-level-dir zips are flattened. |
+| `<modname>.lua` | `Mods/<modname>/Scripts/main.lua` | For loose Lua mods. |
+| `<modname>.dll` | `Mods/<modname>/dlls/main.dll` | For native UE4SS mods. |
+
+Enabled state is the source-of-truth `mods.txt` (`ModName : 0` / `: 1`) which UE4SS loads at server start. The hub patches that file in-place, preserving comments and line order.
+
+UE4SS itself ships with the `windrose-dedicated-server-docker` image — no separate install step needed for the loader. Built-in UE4SS mods (`BPModLoaderMod`, `ConsoleEnablerMod`, etc.) appear in the Rigging list with a "built-in" badge; deleting them is gated behind a confirm.
+
+Restart the ship after installing or toggling — UE4SS only reads `mods.txt` at process start.
+
 ## Roadmap
 
-- Mod manager — drop in [Kraken Lua/C++ mods](../README.md) per-ship from the bridge
-- Player list + RCON dispatch (when paired with the [in-game admin tool](https://github.com/C9RE/Kraken))
-- Scheduled backups + retention policy per ship
-- One-click image-channel switching (`stable` / `dev`)
-- Multi-host Docker (point the hub at remote `DOCKER_HOST=tcp://…` instead of just the local socket)
+- Scheduled backups + retention policy per ship.
+- Browse + restore from the backup tarball list (currently view-only).
+- One-click image-channel switch (`stable` / `dev`).
+- Multi-host Docker — point the hub at a remote `DOCKER_HOST=tcp://…` instead of the local socket.
+- Optional auth (token / basic) — currently the hub is unauthenticated; expose it on a private network or front it with Caddy/nginx auth.
 
 ---
 

@@ -1,6 +1,7 @@
 <script>
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import Rigging from '$lib/components/Rigging.svelte';
 
 	let id = $derived(page.params.id);
 
@@ -259,8 +260,10 @@
 			</article>
 		</div>
 
-		<!-- RIGHT — backups + logs -->
+		<!-- RIGHT — mods, backups, logs -->
 		<div class="col">
+			<Rigging {id} />
+
 			<article class="card">
 				<header class="card-head">
 					<h2 class="serif">cargo hold</h2>
