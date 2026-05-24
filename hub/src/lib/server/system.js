@@ -113,8 +113,14 @@ export async function get_status() {
 	const ahead = parseInt(ahead_r) || 0;
 	const behind = parseInt(behind_r) || 0;
 
-	const status_r = await git(['status', '--porcelain']);
-	const dirty = !!status_r.stdout.trim();
+	// Dirty tracking is informational only - apply_update uses `reset --hard`
+	// and overwrites anything in the way. We still report it so the UI can
+	// warn the user about what's about to get nuked before they click apply.
+	const status_r = await git(['status', '--porcelain'], { timeout: 10_000 });
+	const dirty_files = status_r.ok
+		? status_r.stdout.split('\n').map(l => l.trim()).filter(Boolean)
+		: [];
+	const dirty = dirty_files.length > 0;
 
 	return {
 		ok: true,
@@ -122,8 +128,8 @@ export async function get_status() {
 		branch, remote: REMOTE, remote_url,
 		current_sha, current_short, current_subject, current_date,
 		remote_sha, remote_short, remote_subject, remote_date,
-		ahead, behind, dirty,
-		update_available: behind > 0 && !dirty,
+		ahead, behind, dirty, dirty_files,
+		update_available: behind > 0,
 		systemd_unit: SYSTEMD_UNIT, started_at: STARTED_AT,
 		uptime_seconds: Math.floor(Date.now() / 1000) - STARTED_AT,
 		pid: process.pid, node_version: process.version,
@@ -134,6 +140,12 @@ export async function get_status() {
  * Pull, install, build, restart. Returns a streamed-style log so the UI can
  * show what happened.
  *
+ * Update strategy: `fetch` + `reset --hard origin/<branch>`. This always
+ * succeeds even if the working tree has local edits (we get stuck otherwise
+ * because there's no merge UI). If the tree IS dirty we refuse to proceed
+ * unless the caller passes `confirm_discard: true`, and we log the discarded
+ * files so it isn't silent. The UI shows the file list in the confirm dialog.
+ *
  * Restart hand-off:
  * - If KRAKEN_SYSTEMD_UNIT is set, we exit(0) once the build is done. systemd
  *   brings us back with the new binary.
@@ -142,24 +154,42 @@ export async function get_status() {
  *   have been sent by then.
  * - If neither works we still return ok with a "manual restart needed" hint.
  *
- * @param {{ allow_dirty?: boolean }} [opts]
+ * @param {{ confirm_discard?: boolean }} [opts]
  */
 export async function apply_update(opts = {}) {
 	const status = await get_status();
 	if (!status.ok) return { ok: false, error: status.error, log: [] };
-	if (status.dirty && !opts.allow_dirty) {
-		return { ok: false, error: 'working tree is dirty - commit/stash first or pass allow_dirty', log: [] };
-	}
-	if (status.behind === 0 && !opts.allow_dirty) {
+	if (status.behind === 0) {
 		return { ok: false, error: 'already up to date', log: [], status };
+	}
+	if (status.dirty && !opts.confirm_discard) {
+		return {
+			ok: false,
+			error: `working tree has ${status.dirty_files.length} uncommitted change(s); pass confirm_discard to overwrite them`,
+			log: [],
+			status,
+		};
 	}
 
 	/** @type {Array<{step: string, ok: boolean, output: string}>} */
 	const log = [];
 
-	const pull = await git(['pull', '--ff-only', REMOTE, status.branch], { timeout: 120_000 });
-	log.push({ step: 'git pull', ok: pull.ok, output: (pull.stdout + '\n' + pull.stderr).trim() });
-	if (!pull.ok) return { ok: false, error: 'git pull failed', log };
+	if (status.dirty) {
+		log.push({
+			step: 'discard local changes',
+			ok: true,
+			output: status.dirty_files.slice(0, 50).join('\n')
+				+ (status.dirty_files.length > 50 ? `\n... +${status.dirty_files.length - 50} more` : ''),
+		});
+	}
+
+	const fetch_r = await git(['fetch', REMOTE, status.branch], { timeout: 60_000 });
+	log.push({ step: 'git fetch', ok: fetch_r.ok, output: (fetch_r.stdout + '\n' + fetch_r.stderr).trim() });
+	if (!fetch_r.ok) return { ok: false, error: 'git fetch failed', log };
+
+	const reset_r = await git(['reset', '--hard', `${REMOTE}/${status.branch}`], { timeout: 30_000 });
+	log.push({ step: 'git reset --hard', ok: reset_r.ok, output: (reset_r.stdout + '\n' + reset_r.stderr).trim() });
+	if (!reset_r.ok) return { ok: false, error: 'git reset failed', log };
 
 	const install = await run('bun', ['install'], { cwd: HUB_DIR, timeout: 300_000 });
 	log.push({ step: 'bun install', ok: install.ok, output: (install.stdout + '\n' + install.stderr).trim() });
