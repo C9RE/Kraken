@@ -1,12 +1,14 @@
 <script>
 	let { ship, onaction } = $props();
 	let busy = $state(false);
+	let busy_action = $state(/** @type {string | null} */ (null));
 
 	/** @param {string} action */
 	async function act(action) {
 		busy = true;
+		busy_action = action;
 		try { await onaction(action); }
-		finally { busy = false; }
+		finally { busy = false; busy_action = null; }
 	}
 
 	function fmt_uptime(secs) {
@@ -49,12 +51,61 @@
 
 	<footer class="actions">
 		{#if ship.active}
-			<button class="btn btn-ghost" disabled={busy} onclick={() => act('restart')}>{busy ? '…' : 'Restart'}</button>
-			<button class="btn btn-danger" disabled={busy} onclick={() => act('stop')}>{busy ? '…' : 'Stop'}</button>
+			<div class="icon-group" role="group" aria-label="Ship controls">
+				<button
+					type="button"
+					class="icon-btn"
+					disabled={busy}
+					aria-label="Restart ship"
+					title="Restart"
+					onclick={() => act('restart')}
+				>
+					{#if busy_action === 'restart'}
+						<span class="spinner" aria-hidden="true"></span>
+					{:else}
+						<span class="glyph" aria-hidden="true">↻</span>
+					{/if}
+				</button>
+				<button
+					type="button"
+					class="icon-btn danger"
+					disabled={busy}
+					aria-label="Stop ship"
+					title="Stop"
+					onclick={() => act('stop')}
+				>
+					{#if busy_action === 'stop'}
+						<span class="spinner" aria-hidden="true"></span>
+					{:else}
+						<span class="glyph" aria-hidden="true">✕</span>
+					{/if}
+				</button>
+			</div>
+			<a class="cta" href={`/ship/${ship.id}`}>
+				<span class="cta-label">Boarding</span>
+				<span class="cta-arrow" aria-hidden="true">→</span>
+			</a>
 		{:else}
-			<button class="btn btn-primary" disabled={busy} onclick={() => act('start')}>{busy ? 'starting…' : 'Cast off'}</button>
+			<button
+				type="button"
+				class="cast-off"
+				disabled={busy}
+				aria-label="Cast off — start ship"
+				onclick={() => act('start')}
+			>
+				{#if busy_action === 'start'}
+					<span class="spinner dark" aria-hidden="true"></span>
+					<span class="cta-label">Casting off…</span>
+				{:else}
+					<span class="glyph anchor" aria-hidden="true">⚓</span>
+					<span class="cta-label">Cast off</span>
+				{/if}
+			</button>
+			<a class="cta ghost" href={`/ship/${ship.id}`}>
+				<span class="cta-label">Boarding</span>
+				<span class="cta-arrow" aria-hidden="true">→</span>
+			</a>
 		{/if}
-		<a class="btn btn-ghost" href={`/ship/${ship.id}`}>Boarding →</a>
 	</footer>
 </article>
 
@@ -104,6 +155,181 @@
 	dt { font-size: 10px; color: var(--color-ink-4); letter-spacing: 0.16em; text-transform: uppercase; margin: 0; }
 	dd { color: var(--color-ink-2); margin: 0; font-size: 12px; }
 
-	.actions { display: flex; gap: 8px; flex-wrap: wrap; }
-	.actions .btn { flex: 1; min-width: 100px; }
+	/* ─── Actions footer ──────────────────────────────────────── */
+	.actions {
+		display: flex;
+		gap: 8px;
+		flex-wrap: wrap;
+		align-items: stretch;
+		padding-top: 14px;
+		border-top: 1px solid var(--color-border);
+	}
+
+	/* Icon-button group (Restart / Stop) — left-anchored, compact */
+	.icon-group {
+		display: inline-flex;
+		gap: 0;
+		border: 1px solid var(--color-border-strong);
+		border-radius: 2px;
+		overflow: hidden;
+		background: var(--color-surface);
+	}
+	.icon-btn {
+		appearance: none;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 36px;
+		height: 36px;
+		padding: 0 10px;
+		background: transparent;
+		border: 0;
+		border-right: 1px solid var(--color-border);
+		color: var(--color-ink-3);
+		font-family: var(--font-body);
+		cursor: pointer;
+		transition: background 0.15s, color 0.15s, transform 0.15s;
+	}
+	.icon-btn:last-child { border-right: 0; }
+	.icon-btn .glyph {
+		font-size: 16px;
+		line-height: 1;
+		display: inline-block;
+	}
+	.icon-btn:hover:not(:disabled) {
+		background: var(--color-accent-soft);
+		color: var(--color-accent-bright);
+		transform: translateY(-1px);
+	}
+	.icon-btn.danger:hover:not(:disabled) {
+		background: rgba(176, 77, 62, 0.12);
+		color: var(--color-crimson);
+	}
+	.icon-btn:focus-visible {
+		outline: none;
+		box-shadow: inset 0 0 0 1px var(--color-border-focus);
+		color: var(--color-accent-bright);
+	}
+	.icon-btn:active:not(:disabled) { transform: translateY(0); }
+	.icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+	/* Boarding primary CTA — right-anchored, weightier */
+	.cta {
+		margin-left: auto;
+		display: inline-flex;
+		align-items: center;
+		gap: 10px;
+		height: 36px;
+		padding: 0 16px;
+		background: var(--color-accent-soft);
+		border: 1px solid var(--color-accent);
+		border-radius: 2px;
+		color: var(--color-accent-bright);
+		font-family: var(--font-body);
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		text-decoration: none;
+		transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
+	}
+	.cta .cta-arrow {
+		font-size: 14px;
+		transition: transform 0.18s;
+	}
+	.cta:hover {
+		background: var(--color-accent);
+		border-color: var(--color-accent-bright);
+		color: #131212;
+		transform: translateY(-1px);
+	}
+	.cta:hover .cta-arrow { transform: translateX(3px); }
+	.cta:focus-visible {
+		outline: none;
+		box-shadow: 0 0 0 2px var(--color-border-focus);
+	}
+	.cta:active { transform: translateY(0); }
+
+	/* Ghost variant of CTA — used alongside Cast off (moored state) */
+	.cta.ghost {
+		background: transparent;
+		border-color: var(--color-border-strong);
+		color: var(--color-ink-2);
+	}
+	.cta.ghost:hover {
+		background: var(--color-accent-soft);
+		border-color: var(--color-accent);
+		color: var(--color-accent-bright);
+	}
+
+	/* Cast off — prominent, accent-filled, anchor glyph */
+	.cast-off {
+		appearance: none;
+		display: inline-flex;
+		align-items: center;
+		gap: 10px;
+		height: 36px;
+		padding: 0 18px;
+		background: var(--color-accent);
+		border: 1px solid var(--color-accent);
+		border-radius: 2px;
+		color: #131212;
+		font-family: var(--font-body);
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		cursor: pointer;
+		transition: background 0.15s, border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+	}
+	.cast-off .anchor { font-size: 15px; line-height: 1; }
+	.cast-off:hover:not(:disabled) {
+		background: var(--color-accent-bright);
+		border-color: var(--color-accent-bright);
+		transform: translateY(-1px);
+		box-shadow: 0 4px 12px rgba(154, 127, 62, 0.25);
+	}
+	.cast-off:focus-visible {
+		outline: none;
+		box-shadow: 0 0 0 2px var(--color-border-focus);
+	}
+	.cast-off:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
+	.cast-off:disabled { opacity: 0.55; cursor: not-allowed; }
+
+	/* Disable sibling interaction during busy state */
+	.actions:has(.icon-btn:disabled) .cta,
+	.actions:has(.cast-off:disabled) .cta.ghost {
+		opacity: 0.5;
+		pointer-events: none;
+	}
+
+	/* CTA label — shared text style */
+	.cta-label {
+		display: inline-block;
+		line-height: 1;
+	}
+
+	/* Spinner — pure CSS, nautical brass */
+	.spinner {
+		width: 12px;
+		height: 12px;
+		border-radius: 50%;
+		border: 1.5px solid var(--color-border-strong);
+		border-top-color: var(--color-accent-bright);
+		animation: spin 0.7s linear infinite;
+		display: inline-block;
+	}
+	.spinner.dark {
+		border-color: rgba(19, 18, 18, 0.25);
+		border-top-color: #131212;
+	}
+	@keyframes spin {
+		to { transform: rotate(360deg); }
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.spinner { animation-duration: 1.6s; }
+		.icon-btn, .cta, .cta-arrow, .cast-off { transition: none; }
+		.icon-btn:hover, .cta:hover, .cast-off:hover { transform: none; }
+	}
 </style>
