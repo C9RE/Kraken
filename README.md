@@ -85,7 +85,7 @@ open `http://your-host:8783`. it starts empty. click **drydock** and commission 
 | `KRAKEN_GIT_BRANCH` | (current branch) | branch for self-update |
 | `KRAKEN_SYSTEMD_UNIT` | (empty) | if set, the hub exits cleanly after update so systemd respawns it |
 
-there's no auth on the hub. run it on a private network or front it with a reverse proxy that does auth. same threat model as the docker stack itself.
+there's optional PIN auth (4 to 12 digits, scrypt-hashed, rate-limited 5/15min per IP). off by default; flip it on from the settings page. when it's off, the hub assumes you're on a private network or behind a reverse proxy that does auth - same threat model as the docker stack itself.
 
 ### running it as a service
 

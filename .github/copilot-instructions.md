@@ -1,7 +1,6 @@
 # GitHub Copilot Instructions
 
 ## Language and communication
-- Respond to the user in Polish.
 - Write code, variable names, commit messages, and comments in English.
 - Keep responses short, concrete, and action-oriented.
 - State assumptions clearly when something is uncertain.
