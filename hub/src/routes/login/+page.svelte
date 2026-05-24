@@ -10,7 +10,13 @@
 	let inputs = $state([]);
 
 	let pin = $derived(digits.join(''));
-	let next = $derived(page.url?.searchParams.get('next') || '/');
+	// Only accept same-site relative paths. `//foo` is a protocol-relative URL
+	// and would redirect off-site, so we exclude it explicitly. Anything else
+	// falls back to the root.
+	let next = $derived.by(() => {
+		const raw = page.url?.searchParams.get('next') || '/';
+		return raw.startsWith('/') && !raw.startsWith('//') ? raw : '/';
+	});
 
 	$effect(() => {
 		if (!lockout_remaining) return;

@@ -4,12 +4,13 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 export default {
 	preprocess: vitePreprocess(),
 	kit: {
-		adapter: adapter(),
-		// The hub is intended to run on a trusted network or behind a reverse
-		// proxy that handles auth - same threat model as the upstream Docker
-		// stack itself. Disabling the SvelteKit CSRF Origin check keeps form
-		// uploads (mods) working from scripted clients (curl, CI, other UIs)
-		// without requiring callers to spoof Origin headers.
-		csrf: { checkOrigin: false },
+		// 1 GiB body limit so real mod uploads (zip/pak) get through. The
+		// adapter-node default is 512 KB and silently rejects anything bigger,
+		// which made every non-trivial mod fail with a confusing error.
+		adapter: adapter({ bodySizeLimit: 1024 * 1024 * 1024 }),
+		// CSRF Origin check stays ON. Scripted clients that want to POST from
+		// outside a browser must set `Origin: <hub-url>` explicitly. Disabling
+		// this globally means any tab in the same browser can fire start/stop,
+		// mod upload, or PIN change against an authed session.
 	},
 };
