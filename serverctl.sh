@@ -3032,7 +3032,13 @@ diagnostics_bundle() {
   } >"$tmp_dir/summary.txt"
 
   dc ps >"$tmp_dir/compose-ps.txt" 2>&1 || true
-  dc config >"$tmp_dir/compose-config.txt" 2>&1 || true
+  # `dc config` interpolates the .env into the rendered compose YAML so the
+  # raw output contains every secret in the stack. Filter it through the same
+  # redaction pattern used for the .env dump below, covering both `KEY=value`
+  # and YAML `key: value` shapes.
+  dc config 2>&1 \
+    | sed -E 's/((TOKEN|PASSWORD|WEBHOOK|PASS|SECRET)[A-Z_]*)([[:space:]]*[:=][[:space:]]*).*/\1\3REDACTED/gI' \
+    >"$tmp_dir/compose-config.txt" || true
   dc logs --no-color --timestamps --tail "$lines" "$SERVICE_NAME" >"$tmp_dir/container-logs-tail.txt" 2>&1 || true
 
   if [[ -f "$UPDATE_LOG_FILE" ]]; then
@@ -3045,7 +3051,7 @@ diagnostics_bundle() {
   fi
 
   if [[ -f "$SCRIPT_DIR/.env" ]]; then
-    sed -E 's/(TOKEN|PASSWORD|WEBHOOK|PASS)=.*/\1=REDACTED/gI' "$SCRIPT_DIR/.env" >"$tmp_dir/env-redacted.txt"
+    sed -E 's/(TOKEN|PASSWORD|WEBHOOK|PASS|SECRET)=.*/\1=REDACTED/gI' "$SCRIPT_DIR/.env" >"$tmp_dir/env-redacted.txt"
   fi
 
   container_name="$(dotenv_value CONTAINER_NAME || true)"

@@ -458,6 +458,32 @@ async function install_zip(ship, name, buf, hint_kind, enable) {
 	const zip_path = join(tmp, 'in.zip');
 	await writeFile(zip_path, buf);
 
+	// Pre-scan entry paths so a crafted archive can't ZipSlip out of `tmp`.
+	// unzip strips leading slashes but historically has been inconsistent
+	// about embedded `..` segments; we don't trust it.
+	await new Promise((resolve, reject) => {
+		const p = spawn('zipinfo', ['-1', zip_path]);
+		let out = '', err = '';
+		p.stdout.on('data', d => out += d.toString());
+		p.stderr.on('data', d => err += d.toString());
+		p.on('close', code => {
+			if (code !== 0) return reject(new Error(`zipinfo exited ${code}: ${err.trim()}`));
+			for (const raw of out.split('\n')) {
+				const entry = raw.trim();
+				if (!entry) continue;
+				if (entry.startsWith('/') || entry.includes('\0')) {
+					return reject(new Error(`refused: absolute or NUL in zip entry: ${entry}`));
+				}
+				const resolved = path_resolve(tmp, entry);
+				if (resolved !== tmp && !resolved.startsWith(tmp + '/')) {
+					return reject(new Error(`refused: zip entry escapes target dir: ${entry}`));
+				}
+			}
+			resolve(undefined);
+		});
+		setTimeout(() => p.kill(), 30_000);
+	});
+
 	await new Promise((resolve, reject) => {
 		const p = spawn('unzip', ['-q', '-o', zip_path, '-d', tmp]);
 		let err = '';

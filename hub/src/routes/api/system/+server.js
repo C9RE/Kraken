@@ -13,7 +13,7 @@ export async function POST({ request }) {
 		return json({ ok: false, error: `unknown action: ${body.action}` }, { status: 400 });
 	}
 	try {
-		const result = await apply_update({ allow_dirty: body.allow_dirty === true });
+		const result = await apply_update({ confirm_discard: body.confirm_discard === true });
 		return json(result, { status: result.ok ? 200 : 400 });
 	} catch (e) {
 		return json({ ok: false, error: String(e?.message || e) }, { status: 500 });
