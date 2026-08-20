@@ -10,6 +10,7 @@
 		port: 7777,
 		queryport: 7778,
 		server_password: '',
+		user_selected_region: '',
 		image_tag: 'v1.6.4',
 		hostname: 'localhost',
 	});
@@ -184,6 +185,16 @@
 						placeholder="localhost"
 						required
 					/>
+				</label>
+
+				<label class="field">
+					<span class="field-label">Connection Region</span>
+					<select bind:value={form.user_selected_region}>
+						<option value="">Auto-Select (lowest latency)</option>
+						<option value="EU">EU (Europe &amp; North America)</option>
+						<option value="SEA">SEA (South East Asia)</option>
+						<option value="CIS">CIS</option>
+					</select>
 				</label>
 
 				<div class="info-callout mono">

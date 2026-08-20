@@ -35,6 +35,7 @@
 		{ key: 'GENERATE_SETTINGS', label: 'auto-patch ServerDescription', kind: 'bool' },
 		{ key: 'USE_DIRECT_CONNECTION', label: 'direct connection (no invite)', kind: 'bool' },
 		{ key: 'DIRECT_CONNECTION_SERVER_PORT', label: 'direct port', kind: 'number' },
+		{ key: 'USER_SELECTED_REGION', label: 'connection region', kind: 'select', options: [{ value: '', label: 'Auto (lowest latency)' }, { value: 'EU', label: 'EU (Europe & NA)' }, { value: 'SEA', label: 'SEA (South East Asia)' }, { value: 'CIS', label: 'CIS' }] },
 		{ key: 'DISCORD_WEBHOOK_URL', label: 'discord webhook', kind: 'text' },
 		{ key: 'GOTIFY_URL', label: 'gotify url', kind: 'text' },
 		{ key: 'GOTIFY_TOKEN', label: 'gotify token', kind: 'text' },
@@ -229,6 +230,12 @@
 									<option value="">(unset)</option>
 									<option value="true">true</option>
 									<option value="false">false</option>
+								</select>
+							{:else if f.kind === 'select'}
+								<select bind:value={env_draft[f.key]}>
+									{#each f.options as opt}
+										<option value={opt.value}>{opt.label}</option>
+									{/each}
 								</select>
 							{:else if f.kind === 'number'}
 								<input type="number" bind:value={env_draft[f.key]} />

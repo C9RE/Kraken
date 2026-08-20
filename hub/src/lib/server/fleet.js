@@ -286,6 +286,7 @@ export async function create_ship(input) {
 		SERVER_PASSWORD: input.server_password || '',
 		MAX_PLAYERS: String(input.max_players ?? 4),
 		P2P_PROXY_ADDRESS: '127.0.0.1',
+		USER_SELECTED_REGION: input.user_selected_region || input.region || '',
 		PORT: String(port),
 		QUERYPORT: String(queryport),
 		MULTIHOME: '0.0.0.0',
