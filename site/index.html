@@ -33,9 +33,9 @@
   <style>
     :root {
       --bg: #07090c;
-      --bg-surface: #0e1217;
-      --bg-surface-elevated: #141920;
-      --bg-surface-hover: #192029;
+      --bg-surface: rgba(14, 18, 23, 0.82);
+      --bg-surface-elevated: rgba(20, 25, 32, 0.88);
+      --bg-surface-hover: rgba(25, 32, 41, 0.92);
       
       --gold: #ccb99d;
       --gold-bright: #e8d7be;
@@ -86,13 +86,26 @@
       flex-direction: column;
       position: relative;
       overflow-x: hidden;
-      background: 
-        radial-gradient(ellipse 90% 60% at 50% -10%, rgba(35, 52, 60, 0.35), transparent 70%),
-        radial-gradient(ellipse 60% 40% at 50% 100%, rgba(20, 30, 36, 0.4), transparent 70%),
-        var(--bg);
+      background-color: var(--bg);
     }
 
-    /* Subtle maritime grain texture */
+    /* Fixed Non-Moving Atmospheric Windrose Backdrop */
+    .fixed-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(ellipse 90% 70% at 50% 15%, rgba(7, 9, 12, 0.62) 0%, rgba(7, 9, 12, 0.85) 55%, rgba(7, 9, 12, 0.98) 100%),
+        linear-gradient(180deg, rgba(7, 9, 12, 0.65) 0%, rgba(7, 9, 12, 0.82) 40%, rgba(7, 9, 12, 0.98) 100%),
+        url('/assets/windrose-bg.webp');
+      background-position: center 25%;
+      background-repeat: no-repeat;
+      background-size: cover;
+      pointer-events: none;
+    }
+
+    /* Subtle maritime celestial texture */
     body::before {
       content: '';
       position: fixed;
@@ -368,6 +381,8 @@
     .showcase-wrap {
       margin: 48px auto 80px;
       background: var(--bg-surface);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       border: 1px solid var(--gold-border);
       border-radius: 12px;
       box-shadow: var(--shadow-elevated);
@@ -575,6 +590,8 @@
 
     .pillar-card {
       background: var(--bg-surface);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       border: 1px solid var(--gold-border);
       border-radius: 10px;
       padding: 28px;
@@ -610,6 +627,8 @@
     /* Modding Architecture Feature Box */
     .feature-strip {
       background: var(--bg-surface);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       border: 1px solid var(--gold-border);
       border-radius: 12px;
       padding: 36px;
@@ -687,6 +706,8 @@
 
     .deploy-card {
       background: var(--bg-surface);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       border: 1px solid var(--gold-border);
       border-radius: 10px;
       padding: 30px;
@@ -745,6 +766,8 @@
 
     .faq-item {
       background: var(--bg-surface);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       border: 1px solid var(--gold-border);
       border-radius: 8px;
       overflow: hidden;
@@ -807,6 +830,8 @@
   </style>
 </head>
 <body>
+  <!-- Fixed Non-Moving Windrose Atmosphere Backdrop -->
+  <div class="fixed-backdrop" aria-hidden="true"></div>
 
   <!-- MASTHEAD -->
   <header class="masthead">
