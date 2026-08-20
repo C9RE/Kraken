@@ -424,6 +424,39 @@
     .btn-secondary:active { transform: scale(0.96); }
 
     /* Quick Install Bar */
+    .cli-container {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      max-width: 100%;
+    }
+    .cli-os-tabs {
+      display: inline-flex;
+      background: rgba(14, 18, 23, 0.7);
+      padding: 3px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      gap: 4px;
+    }
+    .cli-tab {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--ink-3);
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .cli-tab:hover { color: #ffffff; }
+    .cli-tab.active {
+      background: var(--gold-soft);
+      border-color: var(--gold-border);
+      color: var(--gold-bright);
+    }
     .cli-bar {
       display: inline-flex;
       align-items: center;
@@ -981,14 +1014,20 @@
           </a>
         </div>
 
-        <!-- CLI Copy Bar -->
-        <div class="cli-bar">
-          <span class="prompt">$</span>
-          <code>git clone https://github.com/C9RE/Kraken.git && cd Kraken/hub && bun install</code>
-          <button class="cli-copy-btn" onclick="copyCli(this)">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-            <span>Copy</span>
-          </button>
+        <!-- CLI Quick Install Box -->
+        <div class="cli-container">
+          <div class="cli-os-tabs">
+            <button class="cli-tab active" onclick="switchCli('linux', this)">🐧 Linux (curl)</button>
+            <button class="cli-tab" onclick="switchCli('windows', this)">🪟 Windows (PowerShell)</button>
+          </div>
+          <div class="cli-bar">
+            <span class="prompt" id="cliPrompt">$</span>
+            <code id="cliCommand">curl -fsSL https://thekraken.cloud/install.sh | bash</code>
+            <button class="cli-copy-btn" onclick="copyActiveCli(this)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+              <span>Copy</span>
+            </button>
+          </div>
         </div>
 
         <!-- LIVE VESSEL SHOWCASE -->
@@ -1142,39 +1181,48 @@
       <div class="section-head">
         <p class="section-kicker">Deployment</p>
         <h2 class="section-title">Cast Off in 60 Seconds</h2>
-        <p class="section-sub">Deploy via the SvelteKit Hub web interface or run standalone with Docker Compose.</p>
+        <p class="section-sub">Deploy via 1-line automated installers for Linux &amp; Windows or run standalone with Docker.</p>
       </div>
 
       <div class="deploy-grid">
         <div class="deploy-card featured">
           <div class="deploy-head">
-            <h3 class="deploy-title">Kraken Hub (Web GUI)</h3>
-            <span class="deploy-tag">Recommended</span>
+            <h3 class="deploy-title">🐧 Linux 1-Liner</h3>
+            <span class="deploy-tag">Docker Engine</span>
           </div>
           <p class="deploy-desc">
-            Full web control plane. Manage unlimited ships, drag-drop mods, view live logs, and configure PIN auth.
+            Automated Linux script. Checks CPU AVX, verifies Docker &amp; Bun, compiles SvelteKit Hub, and sets up systemd service.
           </p>
           <div class="code-snippet">
-git clone https://github.com/C9RE/Kraken.git
-cd Kraken/hub
-bun install && bun run build
-PORT=8783 bun run start
+curl -fsSL https://thekraken.cloud/install.sh | bash
+          </div>
+        </div>
+
+        <div class="deploy-card featured">
+          <div class="deploy-head">
+            <h3 class="deploy-title">🪟 Windows 1-Liner</h3>
+            <span class="deploy-tag">Native Win32</span>
+          </div>
+          <p class="deploy-desc">
+            Zero-overhead native Windows engine. Runs on bare-metal with zero Wine or WSL2 virtualization.
+          </p>
+          <div class="code-snippet">
+irm https://thekraken.cloud/install.ps1 | iex
           </div>
         </div>
 
         <div class="deploy-card">
           <div class="deploy-head">
-            <h3 class="deploy-title">Headless Docker</h3>
-            <span class="deploy-tag">CLI Only</span>
+            <h3 class="deploy-title">🛠️ Manual / Headless</h3>
+            <span class="deploy-tag">Git + CLI</span>
           </div>
           <p class="deploy-desc">
-            Minimal one-liner deployment if you only need a single isolated game server without the web dashboard.
+            Clone the repository and run the SvelteKit Hub manually or start a standalone Docker container.
           </p>
           <div class="code-snippet">
 git clone https://github.com/C9RE/Kraken.git
-cd Kraken
-cp .env.example .env
-docker compose up -d
+cd Kraken/hub && bun install && bun run build
+PORT=8783 bun run start
           </div>
         </div>
       </div>
@@ -1190,11 +1238,21 @@ docker compose up -d
       <div class="faq-list">
         <div class="faq-item open">
           <div class="faq-question" onclick="toggleFaq(this)">
+            <span>Can I run Kraken natively on Windows without Docker?</span>
+            <span class="faq-icon">+</span>
+          </div>
+          <div class="faq-answer">
+            Yes! Kraken includes a full <strong>Native Windows Engine</strong>. It downloads the server binaries using native Windows SteamCMD and supervises <code>R5Server.exe</code> directly on the Windows NT kernel with 0% Wine/WSL2 emulation overhead and direct WinSock2 UDP throughput.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
             <span>Do I need Wine installed on my Linux host?</span>
             <span class="faq-icon">+</span>
           </div>
           <div class="faq-answer">
-            No. WineHQ (x86_64), Xvfb, SteamCMD, and all Windows runtime emulation layers are fully containerized inside the Docker image. Your host only needs Docker Engine with Compose v2+ and an AVX-capable CPU.
+            No. On Linux, WineHQ (x86_64), Xvfb, SteamCMD, and all Windows runtime emulation layers are fully containerized inside the Docker image. Your host only needs Docker Engine with Compose v2+ and an AVX-capable CPU.
           </div>
         </div>
 
@@ -1224,7 +1282,7 @@ docker compose up -d
             <span class="faq-icon">+</span>
           </div>
           <div class="faq-answer">
-            Yes! That is exactly why Kraken was built. The Drydock automatically manages port offsets (e.g., 7777/7788, 7787/7798, etc.) and keeps all save data, mods, and container state in isolated directories.
+            Yes! That is exactly why Kraken was built. The Drydock automatically manages port offsets (e.g., 7777/7778, 7787/7788, etc.) and keeps all save data, mods, and container state in isolated directories.
           </div>
         </div>
       </div>
@@ -1236,6 +1294,8 @@ docker compose up -d
     <div class="wrap">
       <div class="foot-links">
         <a href="https://thekraken.cloud" class="foot-link">thekraken.cloud</a>
+        <span>·</span>
+        <a href="https://demo.thekraken.cloud" class="foot-link" target="_blank" rel="noopener">Interactive Demo</a>
         <span>·</span>
         <a href="https://github.com/C9RE/Kraken" class="foot-link" target="_blank" rel="noopener">GitHub</a>
         <span>·</span>
@@ -1250,8 +1310,29 @@ docker compose up -d
   </footer>
 
   <script>
-    function copyCli(btn) {
-      const text = 'git clone https://github.com/C9RE/Kraken.git && cd Kraken/hub && bun install && bun run build';
+    const CLI_COMMANDS = {
+      linux: {
+        prompt: '$',
+        cmd: 'curl -fsSL https://thekraken.cloud/install.sh | bash'
+      },
+      windows: {
+        prompt: 'PS>',
+        cmd: 'irm https://thekraken.cloud/install.ps1 | iex'
+      }
+    };
+    let currentOs = 'linux';
+
+    function switchCli(os, btn) {
+      currentOs = os;
+      document.querySelectorAll('.cli-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      const info = CLI_COMMANDS[os];
+      document.getElementById('cliPrompt').innerText = info.prompt;
+      document.getElementById('cliCommand').innerText = info.cmd;
+    }
+
+    function copyActiveCli(btn) {
+      const text = CLI_COMMANDS[currentOs].cmd;
       navigator.clipboard.writeText(text).then(() => {
         const orig = btn.innerHTML;
         btn.innerHTML = '<span>Copied ✓</span>';

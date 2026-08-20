@@ -21,13 +21,12 @@
 // - https://winternode.com/help/games/windrose/setup/how-to-add-mods
 // - https://hypeserv.com/en/blog/how-to-install-mods-on-a-windrose-server
 
-import { readFile, writeFile, mkdir, readdir, stat, rm, rename, unlink, copyFile } from 'fs/promises';
-import { spawn } from 'child_process';
-import { join, basename, extname, resolve as path_resolve } from 'path';
+import { readFile, writeFile, readdir, stat, mkdir, rm, rename, copyFile, unlink } from 'fs/promises';
+import { join, resolve as path_resolve, dirname, basename, extname } from 'path';
 import { existsSync } from 'fs';
 import { tmpdir } from 'os';
-
 import { get_ship } from './fleet.js';
+import { get_dir_size, cross_cp, cross_unzip } from './utils.js';
 
 const NAME_RE = /^[A-Za-z0-9_][A-Za-z0-9 _.-]{0,63}$/;
 
@@ -306,13 +305,7 @@ export async function list_mods(ship_id) {
 
 /** @param {string} dir */
 async function dir_size(dir) {
-	return new Promise(resolve => {
-		const proc = spawn('du', ['-sb', dir]);
-		let buf = '';
-		proc.stdout.on('data', d => buf += d.toString());
-		proc.on('close', () => resolve(parseInt(buf.split('\t')[0]) || 0));
-		setTimeout(() => proc.kill(), 5000);
-	});
+	return get_dir_size(dir);
 }
 
 /** @param {string} ship_id @param {string} name @param {'ue4ss'|'logic-pak'|'asset-pak'} kind @param {boolean} on */
@@ -458,40 +451,7 @@ async function install_zip(ship, name, buf, hint_kind, enable) {
 	const zip_path = join(tmp, 'in.zip');
 	await writeFile(zip_path, buf);
 
-	// Pre-scan entry paths so a crafted archive can't ZipSlip out of `tmp`.
-	// unzip strips leading slashes but historically has been inconsistent
-	// about embedded `..` segments; we don't trust it.
-	await new Promise((resolve, reject) => {
-		const p = spawn('zipinfo', ['-1', zip_path]);
-		let out = '', err = '';
-		p.stdout.on('data', d => out += d.toString());
-		p.stderr.on('data', d => err += d.toString());
-		p.on('close', code => {
-			if (code !== 0) return reject(new Error(`zipinfo exited ${code}: ${err.trim()}`));
-			for (const raw of out.split('\n')) {
-				const entry = raw.trim();
-				if (!entry) continue;
-				if (entry.startsWith('/') || entry.includes('\0')) {
-					return reject(new Error(`refused: absolute or NUL in zip entry: ${entry}`));
-				}
-				const resolved = path_resolve(tmp, entry);
-				if (resolved !== tmp && !resolved.startsWith(tmp + '/')) {
-					return reject(new Error(`refused: zip entry escapes target dir: ${entry}`));
-				}
-			}
-			resolve(undefined);
-		});
-		setTimeout(() => p.kill(), 30_000);
-	});
-
-	await new Promise((resolve, reject) => {
-		const p = spawn('unzip', ['-q', '-o', zip_path, '-d', tmp]);
-		let err = '';
-		p.stderr.on('data', d => err += d.toString());
-		p.on('close', code => code === 0 ? resolve(undefined)
-			: reject(new Error(`unzip exited ${code}: ${err.trim()}`)));
-		setTimeout(() => p.kill(), 60_000);
-	});
+	await cross_unzip(zip_path, tmp);
 	await unlink(zip_path).catch(() => {});
 
 	// If single top-level dir, descend into it (typical GitHub release shape).
@@ -536,10 +496,7 @@ async function install_zip(ship, name, buf, hint_kind, enable) {
 		await mkdir(target, { recursive: true });
 		try { await rename(src, target); }
 		catch {
-			await new Promise((resolve, reject) => {
-				const p = spawn('cp', ['-a', `${src}/.`, target]);
-				p.on('close', code => code === 0 ? resolve(undefined) : reject(new Error('cp failed')));
-			});
+			await cross_cp(src, target);
 		}
 		await set_mod_enabled_txt(join(dir, 'mods.txt'), name, enable);
 		await set_mod_enabled_json(join(dir, 'mods.json'), name, enable);

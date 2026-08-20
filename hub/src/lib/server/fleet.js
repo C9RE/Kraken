@@ -14,8 +14,9 @@
 
 import { readFile, writeFile, mkdir, readdir, stat, copyFile, rm } from 'fs/promises';
 import { spawn } from 'child_process';
-import { join, resolve as path_resolve } from 'path';
+import { join, resolve as path_resolve, basename } from 'path';
 import { existsSync } from 'fs';
+import { get_dir_size, IS_WINDOWS } from './utils.js';
 
 const FLEET_ROOT = process.env.KRAKEN_FLEET_ROOT
 	? path_resolve(process.env.KRAKEN_FLEET_ROOT)
@@ -37,6 +38,16 @@ const ID_RE = /^[a-z][a-z0-9-]{1,30}$/;
  * }} ShipRecord */
 
 export const IS_DEMO = process.env.KRAKEN_DEMO === '1' || process.env.KRAKEN_DEMO === 'true';
+
+function is_pid_alive(pid) {
+	if (!pid || isNaN(pid)) return false;
+	try {
+		process.kill(pid, 0);
+		return true;
+	} catch {
+		return false;
+	}
+}
 
 // In-memory runtime state for simulated demo ships
 /** @type {Map<string, {status: string, health: string, started_at: number}>} */
@@ -103,12 +114,30 @@ function compose(cwd, args, timeout_ms = 180_000) {
 	});
 }
 
-/** @param {string} container */
-function container_state(container) {
+/** @param {string} container @param {string} [ship_path] */
+async function container_state(container, ship_path) {
 	if (IS_DEMO) {
 		const st = DEMO_STATE.get(container);
-		if (st) return Promise.resolve(st);
-		return Promise.resolve({ status: 'exited', health: '', started_at: 0 });
+		if (st) return st;
+		return { status: 'exited', health: '', started_at: 0 };
+	}
+
+	// Windows native mode check
+	if (ship_path) {
+		const pid_file = join(ship_path, '.pid');
+		if (existsSync(pid_file)) {
+			try {
+				const pid = parseInt(await readFile(pid_file, 'utf-8'));
+				if (is_pid_alive(pid)) {
+					const started_file = join(ship_path, '.started_at');
+					let started_at = Math.floor(Date.now() / 1000);
+					if (existsSync(started_file)) {
+						started_at = parseInt(await readFile(started_file, 'utf-8')) || started_at;
+					}
+					return { status: 'running', health: 'healthy', started_at };
+				}
+			} catch {}
+		}
 	}
 
 	return new Promise(resolve => {
@@ -175,7 +204,7 @@ export async function list_ships() {
 	for (const s of ships) {
 		const env = await read_env(join(s.path, '.env'));
 		const container = env.CONTAINER_NAME || s.id;
-		const state = await container_state(container);
+		const state = await container_state(container, s.path);
 		out.push({
 			...s,
 			container,
@@ -199,19 +228,8 @@ export async function get_ship(id) {
 	if (!ship) return null;
 	const env = await read_env(join(ship.path, '.env'));
 	const container = env.CONTAINER_NAME || ship.id;
-	const state = await container_state(container);
-
-	let storage_bytes = 0;
-	try {
-		const buf = await new Promise((resolve, reject) => {
-			const p = spawn('du', ['-sb', join(ship.path, 'data')]);
-			let b = '';
-			p.stdout.on('data', d => b += d.toString());
-			p.on('close', code => code === 0 ? resolve(b) : reject());
-			setTimeout(() => p.kill(), 5000);
-		});
-		storage_bytes = parseInt(String(buf).split('\t')[0]) || 0;
-	} catch { /* ignore */ }
+	const state = await container_state(container, ship.path);
+	const storage_bytes = await get_dir_size(join(ship.path, 'data'));
 
 	return {
 		...ship, container, env,
@@ -313,22 +331,88 @@ export async function update_ship_env(id, updates) {
 export async function ship_compose_action(id, action) {
 	const ship = await get_ship(id);
 	if (!ship) throw new Error(`no such ship: ${id}`);
+
+	// Check if we should execute in native mode (Windows native platform or KRAKEN_ENGINE=native)
+	const win_exe = join(ship.path, 'data', 'R5', 'Binaries', 'Win64', 'R5Server-Win64-Shipping.exe');
+	const win_stub = join(ship.path, 'data', 'WindroseServer.exe');
+	const has_win_bin = existsSync(win_exe) || existsSync(win_stub);
+
+	if (IS_WINDOWS || process.env.KRAKEN_ENGINE === 'native' || (!existsSync(join(ship.path, 'docker-compose.yml')) && has_win_bin)) {
+		const pid_file = join(ship.path, '.pid');
+		const started_file = join(ship.path, '.started_at');
+
+		if (action === 'stop' || action === 'restart') {
+			if (existsSync(pid_file)) {
+				try {
+					const pid = parseInt(await readFile(pid_file, 'utf-8'));
+					if (is_pid_alive(pid)) {
+						if (IS_WINDOWS) {
+							spawn('taskkill', ['/PID', String(pid), '/T', '/F']);
+						} else {
+							process.kill(pid, 'SIGTERM');
+						}
+					}
+					await rm(pid_file, { force: true });
+					await rm(started_file, { force: true });
+				} catch {}
+			}
+			if (action === 'stop') return { ok: true, output: `[+] Stopped Windrose native server` };
+		}
+
+		if (action === 'start' || action === 'restart') {
+			const target_exe = existsSync(win_exe) ? win_exe : win_stub;
+			if (!existsSync(target_exe)) {
+				return { ok: false, output: `Windrose server binary not found at ${win_exe}. Run pull/update to download via SteamCMD.` };
+			}
+			const env = await read_env(join(ship.path, '.env'));
+			const port = env.PORT || '7777';
+			const queryport = env.QUERYPORT || '7778';
+			const args = ['-log', `-Port=${port}`, `-QueryPort=${queryport}`, '-NoSplash', '-multihome=0.0.0.0'];
+			const child = spawn(target_exe, args, {
+				cwd: join(ship.path, 'data'),
+				detached: true,
+				stdio: 'ignore',
+			});
+			child.unref();
+			await writeFile(pid_file, String(child.pid));
+			await writeFile(started_file, String(Math.floor(Date.now() / 1000)));
+			return { ok: true, output: `[+] Launched Windrose native server (PID ${child.pid}) on UDP ${port}` };
+		}
+
+		if (action === 'pull') {
+			const steamcmd_bin = IS_WINDOWS ? 'steamcmd.exe' : 'steamcmd';
+			return new Promise(resolve => {
+				const proc = spawn(steamcmd_bin, [
+					'+force_install_dir', join(ship.path, 'data'),
+					'+login', 'anonymous',
+					'+app_update', '4129620', 'validate',
+					'+quit'
+				]);
+				let buf = '';
+				proc.stdout.on('data', d => buf += d.toString());
+				proc.stderr.on('data', d => buf += d.toString());
+				proc.on('close', code => resolve({ ok: code === 0, output: buf }));
+				setTimeout(() => proc.kill(), 600_000);
+			});
+		}
+	}
+
 	const args = action === 'start'   ? ['up', '-d']
 	          : action === 'stop'     ? ['stop']
 	          : action === 'restart'  ? ['restart']
 	          : action === 'pull'     ? ['pull']
 	          : null;
 	if (!args) throw new Error(`unknown action: ${action}`);
-	return compose(ship.path, args);
+	return compose(ship.path, args, action === 'pull' ? 600_000 : 180_000);
 }
 
 /** docker compose pull && up -d  @param {string} id */
 export async function refit_ship(id) {
 	const ship = await get_ship(id);
 	if (!ship) throw new Error(`no such ship: ${id}`);
-	const pull = await compose(ship.path, ['pull'], 300_000);
+	const pull = await ship_compose_action(id, 'pull');
 	if (!pull.ok) return { ok: false, output: pull.output };
-	const up = await compose(ship.path, ['up', '-d'], 180_000);
+	const up = await ship_compose_action(id, 'restart');
 	return { ok: up.ok, output: pull.output + '\n' + up.output };
 }
 
@@ -341,9 +425,10 @@ export async function backup_ship(id) {
 	const archive = join(ship.path, 'backups', name);
 	await mkdir(join(ship.path, 'backups'), { recursive: true });
 
+	const tar_bin = IS_WINDOWS ? 'tar.exe' : 'tar';
 	const result = await new Promise(resolve => {
-		const proc = spawn('tar', [
-			'czf', archive,
+		const proc = spawn(tar_bin, [
+			'-czf', archive,
 			'data/R5/Saved',
 			'data/R5/ServerDescription.json',
 		], { cwd: ship.path });
@@ -383,10 +468,10 @@ export async function scuttle_ship(id, opts = {}) {
 	const ship = ships.find(s => s.id === id);
 	if (!ship) throw new Error(`no such ship: ${id}`);
 
-	await compose(ship.path, ['down'], 120_000);
+	await ship_compose_action(id, 'stop');
 	const resolved_path = path_resolve(ship.path);
 	const resolved_root = path_resolve(FLEET_ROOT);
-	if (opts.purge && resolved_path.startsWith(resolved_root + '/')) {
+	if (opts.purge && resolved_path.startsWith(resolved_root)) {
 		await rm(resolved_path, { recursive: true, force: true });
 	}
 	await write_index(ships.filter(s => s.id !== id));
@@ -429,6 +514,16 @@ export async function ship_logs(id, lines = 200) {
 			`${ts(5)} [Windrose] Heartbeat pulse OK · server healthy · 0 packet drops`,
 		];
 		return logs.join('\n');
+	}
+
+	// Native Windows log file check
+	const log_file = join(ship.path, 'data', 'R5', 'Saved', 'Logs', 'R5.log');
+	if (existsSync(log_file)) {
+		try {
+			const content = await readFile(log_file, 'utf-8');
+			const all_lines = content.split('\n');
+			return all_lines.slice(-lines).join('\n');
+		} catch {}
 	}
 
 	return new Promise(resolve => {

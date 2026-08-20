@@ -29,19 +29,19 @@ Forked from [`UberDudePL/windrose-dedicated-server-docker`](https://github.com/U
 
 ## ⚡ 1-Line Quick Install
 
-Run our automated installer to check dependencies, install Bun (if needed), build the hub, and configure the optional systemd service:
-
+### 🐧 Linux (Docker Engine)
 ```bash
 curl -fsSL https://thekraken.cloud/install.sh | bash
 ```
 
-Or clone and run the installer locally:
-
-```bash
-git clone https://github.com/C9RE/Kraken.git
-cd Kraken
-./install.sh
+### 🪟 Windows (Native Win32 Engine — Zero Wine/WSL2 Overhead)
+```powershell
+irm https://thekraken.cloud/install.ps1 | iex
 ```
+
+Or clone and run the installer locally:
+* **Linux:** `./install.sh`
+* **Windows:** `.\install.ps1` (or run `start-kraken.bat` after build)
 
 ---
 
