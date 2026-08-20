@@ -94,15 +94,16 @@
       position: fixed;
       inset: 0;
       z-index: 0;
-      background-color: var(--bg);
+      background-color: #07090c;
       background-image: 
-        radial-gradient(ellipse 90% 70% at 50% 15%, rgba(7, 9, 12, 0.62) 0%, rgba(7, 9, 12, 0.85) 55%, rgba(7, 9, 12, 0.98) 100%),
-        linear-gradient(180deg, rgba(7, 9, 12, 0.65) 0%, rgba(7, 9, 12, 0.82) 40%, rgba(7, 9, 12, 0.98) 100%),
+        radial-gradient(ellipse 110% 80% at 50% 25%, rgba(7, 9, 12, 0.22) 0%, rgba(7, 9, 12, 0.52) 55%, rgba(7, 9, 12, 0.86) 100%),
+        linear-gradient(180deg, rgba(7, 9, 12, 0.18) 0%, rgba(7, 9, 12, 0.32) 45%, rgba(7, 9, 12, 0.82) 88%, #07090c 100%),
         url('/assets/windrose-bg.webp');
-      background-position: center 25%;
+      background-position: center 20%;
       background-repeat: no-repeat;
       background-size: cover;
       pointer-events: none;
+      filter: saturate(1.12) contrast(1.06);
     }
 
     /* Subtle maritime celestial texture */
