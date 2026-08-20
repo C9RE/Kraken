@@ -258,7 +258,15 @@ dc() {
 
 usage() {
   cat <<EOF
-Windrose helper script
+                  _  __ _____            _  __ ______ _   _ 
+                 | |/ /|  __ \     /\   | |/ /|  ____| \ | |
+                 | ' / | |__) |   /  \  | ' / | |__  |  \| |
+                 |  <  |  _  /   / /\ \ |  <  |  __| | . \` |
+                 | . \ | | \ \  / ____ \| . \ | |____| |\  |
+                 |_|\_\|_|  \_\/_/    \_\_|\_\|______|_| \_|
+          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             W I N D R O S E   F L E E T   M A N A G E R
+             https://thekraken.cloud  ·  https://github.com/C9RE/Kraken
 
 Usage:
   $SELF_NAME setup

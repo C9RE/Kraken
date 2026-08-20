@@ -1,41 +1,64 @@
 # ⚓ Kraken
 
 > **The self-hosted control plane and Docker fleet manager for [Windrose](https://store.steampowered.com/app/3041230/Windrose/) dedicated servers.**  
-> Live at [**thekraken.cloud**](https://thekraken.cloud/) · Steam Dedicated Server AppID **`4129620`** · Compatible with Windrose **`v1.6.4`**
+> Live at [**thekraken.cloud**](https://thekraken.cloud/) · Interactive Demo at [**demo.thekraken.cloud**](https://demo.thekraken.cloud/) · Steam AppID **`4129620`**
 
 [![Windrose Version](https://img.shields.io/badge/Windrose-v1.6.4-ccb99d?style=flat-square)](https://store.steampowered.com/app/3041230/Windrose/)
 [![Steam AppID](https://img.shields.io/badge/SteamCMD-AppID%204129620-1b2e35?style=flat-square)](https://store.steampowered.com/app/3041230/Windrose/)
 [![Stack](https://img.shields.io/badge/Stack-Svelte%205%20%2B%20Bun-2a4a52?style=flat-square)](https://bun.sh)
 [![License](https://img.shields.io/badge/License-MIT-9a7f3e?style=flat-square)](LICENSE)
 
+```text
+                  _  __ _____            _  __ ______ _   _ 
+                 | |/ /|  __ \     /\   | |/ /|  ____| \ | |
+                 | ' / | |__) |   /  \  | ' / | |__  |  \| |
+                 |  <  |  _  /   / /\ \ |  <  |  __| | . ` |
+                 | . \ | | \ \  / ____ \| . \ | |____| |\  |
+                 |_|\_\|_|  \_\/_/    \_\_|\_\|______|_| \_|
+          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             W I N D R O S E   F L E E T   M A N A G E R
+             Control Plane · Multi-Ship Docker Stacks · UE4SS Mods
+             https://thekraken.cloud  ·  https://github.com/C9RE/Kraken
 ```
-   ___                __
-  / __|________ __ __/ /_____ ___
- / /\ \ / __/ _ \\ \ / __/ -_) _ \
-/_/ /_\\_\ \__,\_\ \__/\___/_//_/
 
-  windrose dedicated server fleet manager
-```
+Kraken gives you a unified browser dashboard to spin up, orchestrate, mod, and configure multiple isolated Windrose dedicated servers without opening an SSH terminal.
 
-Kraken gives you a unified browser dashboard to spin up, manage, and orchestrate multiple isolated Windrose dedicated servers without opening an SSH terminal every time.
-
-Forked from [`UberDudePL/windrose-dedicated-server-docker`](https://github.com/UberDudePL/windrose-dedicated-server-docker) (the underlying Docker image stays aligned with upstream). The fleet manager lives in `hub/` and the landing page lives in `site/` (hosted at [thekraken.cloud](https://thekraken.cloud)).
+Forked from [`UberDudePL/windrose-dedicated-server-docker`](https://github.com/UberDudePL/windrose-dedicated-server-docker). The fleet manager lives in `hub/` and the marketing site lives in `site/` (hosted at [thekraken.cloud](https://thekraken.cloud)).
 
 ---
 
-## ⚓ What Kraken Does
+## ⚡ 1-Line Quick Install
+
+Run our automated installer to check dependencies, install Bun (if needed), build the hub, and configure the optional systemd service:
+
+```bash
+curl -fsSL https://thekraken.cloud/install.sh | bash
+```
+
+Or clone and run the installer locally:
+
+```bash
+git clone https://github.com/C9RE/Kraken.git
+cd Kraken
+./install.sh
+```
+
+---
+
+## ⚓ Key Features
 
 Each dedicated server ("ship") is an isolated `docker-compose` stack with its own configuration, port allocation, save files, and Wine runtime.
 
 - **🚢 Fleet Harbor (`/`)** — Real-time overview of all commissioned vessels. View live container status, uptime, health checks, headcount, UDP port bindings, and invite codes. 1-click start (`Cast off`), stop, restart, or board the bridge.
-- **🏗️ Drydock (`/new`)** — Commission a new dedicated server in seconds. Automatically detects in-use ports and allocates the next free UDP port pair (`7777`, `7787`, `7797`), provisions the directory structure, copies the compose template, and generates `.env`.
-- **🧭 Bridge & Manifest (`/ship/:id`)** — Edit environment variables (`SERVER_NAME`, `SERVER_NOTE`, `INVITE_CODE`, `MAX_PLAYERS`, `PORT`, `QUERYPORT`, `IMAGE_TAG`, `USE_DIRECT_CONNECTION`, `DISCORD_WEBHOOK_URL`, `GOTIFY_URL`) directly from the browser with change-tracking and safe persistence.
-- **🏴‍☠️ Rigging Mod Manager (`/ship/:id` → Rigging)** — Drag-and-drop mod installer supporting UE4SS zip archives, loose `.lua` scripts, native `.dll` mods, and Unreal `.pak`/`.ucas`/`.utoc` files. Automatically maintains dual synchronization across `mods.json` (authoritative) and `mods.txt` (CRLF legacy mirror with pinned `Keybinds : 1` anchor), creates DLL `enabled.txt` sentinels, and auto-detects **WindrosePlus**.
-- **🗺️ Voyage Difficulty Studio (`/ship/:id` → Voyage)** — Visual tuning for world difficulty presets (`Easy`, `Normal`, `Hardcore`, `Custom`) and per-parameter multipliers (Mob HP, Mob Damage, Ship Hull Integrity, Boarding Difficulty, Co-op Scaling) written safely to `WorldDescription.json`. Gated while servers are running to prevent RocksDB flush overwrites.
-- **📦 Cargo Hold Backups (`/ship/:id` → Cargo Hold)** — Hot-tar world save profiles (`data/R5/Saved`) and server configurations into timestamped `.tar.gz` archives with configurable retention.
-- **📜 Log Book (`/ship/:id` → Log Book)** — Tail live container logs and Wine execution output directly in the browser. Zero SSH required.
+- **🏗️ Drydock (`/new`)** — Commission a new dedicated server in seconds. Auto-generates container slugs on the fly, allocates collision-free UDP ports (`7777`, `7787`, `7797`), offers crew capacity preset chips (`2p`, `4p`, `8p`, `12p`, `16p`), connection region selection (`EU`, `SEA`, `CIS`), and live spec summaries.
+- **🧭 Bridge & Manifest (`/ship/:id`)** — Edit environment variables (`SERVER_NAME`, `SERVER_NOTE`, `INVITE_CODE`, `MAX_PLAYERS`, `PORT`, `QUERYPORT`, `IMAGE_TAG`, `USE_DIRECT_CONNECTION`, `USER_SELECTED_REGION`, `DISCORD_WEBHOOK_URL`, `GOTIFY_URL`) directly from the browser with change-tracking and safe persistence.
+- **🏴‍☠️ Rigging Mod Manager (`/ship/:id` → Rigging)** — Drag-and-drop mod uploader supporting UE4SS zip bundles, loose `.lua` scripts, native `.dll` mods, and Unreal `.pak`/`.ucas`/`.utoc` files. Maintains dual synchronization across `mods.json` (authoritative) and `mods.txt` (CRLF legacy mirror with pinned `Keybinds : 1` anchor), creates DLL `enabled.txt` sentinels, and auto-detects **WindrosePlus**.
+- **🗺️ Voyage Difficulty Studio (`/ship/:id` → Voyage)** — Visual tuning aligned with the official Windrose Dedicated Server Guide. Presets (`Easy`, `Medium`, `Hard`, `Custom`) and exact upstream parameter multipliers (Mob HP `0.2–5.0`, Mob Damage `0.2–5.0`, Ship HP `0.4–5.0`, Ship Damage `0.2–2.5`, Boarding `0.2–5.0`, Co-op enemy & ship scaling `0.0–2.0`, Shared Quests, and Immersive Exploration) written safely to `WorldDescription.json`. Gated while servers are running to prevent RocksDB flush overwrites.
+- **📦 Cargo Hold Backups (`/ship/:id` → Cargo Hold)** — Hot-tar world save profiles (`data/R5/Saved`) and server configurations into timestamped `.tar.gz` archives with instant 1-click download or restore.
+- **📜 Log Book (`/ship/:id` → Log Book)** — Tail live container logs and Wine execution output directly in the browser with configurable tail length. Zero SSH required.
 - **⚙️ Settings & 1-Click Updates (`/settings`)** — Built-in Git version tracker showing current commit, remote commit, and a 1-click self-updater that pulls, builds, and seamlessly restarts the service.
-- **🔐 Optional PIN Authentication (`/login`)** — Scrypt-hashed 4–12 digit PIN gate with per-IP exponential rate limiting (5 failed attempts per 15 minutes) and signed session cookies.
+- **🔐 Security PIN Gate (`/login`)** — Scrypt-hashed 4–12 digit PIN access with per-IP exponential brute-force rate limiting (5 failed attempts locks for 15 minutes) and signed session cookies.
+- **🎮 Interactive Demo Sandbox** — Fully functional mirror sandbox at [**demo.thekraken.cloud**](https://demo.thekraken.cloud) where anyone can explore the complete management UI.
 
 ---
 
@@ -47,15 +70,15 @@ The host machine running Kraken requires:
 2. **Bun $\ge$ 1.0** (or Node $\ge$ 20) for running the SvelteKit Hub.
 3. **AVX / AVX2 CPU Instructions** — Windrose game binaries require AVX support (Intel Haswell / AMD Zen or newer).
 4. **Kernel IPv6 Enabled** — The Windrose server process requires IPv6 at the kernel level (do not set `ipv6.disable=1` in boot parameters).
-5. **Host Networking** — Containers run with `network_mode: host` to bind UDP game ports (`7777`/`7788`) and handle P2P NAT punch-through with the Windrose matchmaking gateway (`r5coopapigateway-eu-release.windrose.support:443`).
+5. **Host Networking** — Containers run with `network_mode: host` to bind UDP game ports (`7777`/`7778`) and handle P2P NAT punch-through with the Windrose matchmaking gateway.
 
 *Note: WineHQ (x86_64), Xvfb, and SteamCMD are entirely containerized inside the Docker image. You do not need Wine installed on the host.*
 
 ---
 
-## 🚀 Quickstart
+## 🚀 Manual Quickstart
 
-### 1. Run via Kraken Hub (Recommended)
+### 1. Run via Kraken Hub
 
 ```bash
 git clone https://github.com/C9RE/Kraken.git
@@ -65,7 +88,7 @@ bun run build
 PORT=8783 bun run start
 ```
 
-Open `http://your-server-ip:8783` in your browser. Head over to **Drydock** and commission your first ship!
+Open `http://your-server-ip:8783` in your browser.
 
 ### Hub Environment Variables
 
@@ -99,9 +122,10 @@ Environment=KRAKEN_TEMPLATE=/home/law/core/kraken
 Environment=KRAKEN_SYSTEMD_UNIT=kraken-hub
 Environment=PORT=8783
 Environment=HOST=0.0.0.0
-ExecStart=/usr/bin/bun run start
+Environment=PATH=/home/law/.bun/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/law/.bun/bin/bun run start
 Restart=always
-RestartSec=2
+RestartSec=3
 
 [Install]
 WantedBy=multi-user.target
@@ -114,7 +138,7 @@ sudo systemctl enable --now kraken-hub
 
 ---
 
-### 3. Run Headless via Docker Compose (CLI Only)
+### 3. Run Standalone via Docker Compose (CLI Only)
 
 If you only want a single standalone server without the web dashboard:
 
@@ -122,15 +146,15 @@ If you only want a single standalone server without the web dashboard:
 git clone https://github.com/C9RE/Kraken.git
 cd Kraken
 cp .env.example .env
-# Edit .env with your SERVER_NAME and INVITE_CODE
+# Edit .env with your SERVER_NAME, PORT, and INVITE_CODE
 docker compose up -d
 ```
 
 ---
 
-## 🛠️ Mod Installation Guide
+## 🛠️ Mod Installation Matrix
 
-Windrose loads mods from several distinct directories depending on whether they are UE4SS scripts, native DLLs, or Unreal pak files. Kraken Rigging handles all of them:
+Windrose loads mods from distinct directories depending on whether they are UE4SS scripts, native DLLs, or Unreal pak files. Kraken Rigging handles all of them automatically:
 
 | Upload Format | Target Destination | Activation & Handling |
 |---|---|---|
@@ -142,7 +166,7 @@ Windrose loads mods from several distinct directories depending on whether they 
 | `<name>.pak` (Logic pak) | `data/R5/Content/Paks/LogicMods/<name>.pak` | Loaded via built-in `BPModLoaderMod` |
 
 ### Registry Dual-Sync
-UE4SS 3.x reads `mods.json` for active mod declarations while legacy tooling reads `mods.txt`. Kraken maintains **both** files in lockstep with CRLF formatting and ensures the critical `; Built-in keybinds, do not move up!` and `Keybinds : 1` tail remains anchored at the bottom.
+UE4SS 3.x reads `mods.json` for active mod declarations while legacy tooling reads `mods.txt`. Kraken maintains **both** files in lockstep with CRLF line endings and ensures the critical `; Built-in keybinds, do not move up!` and `Keybinds : 1` tail remains anchored at the bottom.
 
 ---
 
