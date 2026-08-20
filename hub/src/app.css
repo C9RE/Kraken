@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=PT+Sans:wght@400;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 /* Kraken Hub — fleet manager for Windrose dedicated servers.
    Same brass + warm-tan palette as the in-game admin tool, lifted from
@@ -34,8 +35,6 @@
 	--font-body: 'PT Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 	--font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 }
-
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=PT+Sans:wght@400;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 * {
 	scrollbar-width: thin;

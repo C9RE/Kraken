@@ -10,7 +10,7 @@
 		port: 7777,
 		queryport: 7778,
 		server_password: '',
-		image_tag: 'v1.6.2',
+		image_tag: 'v1.6.4',
 		hostname: 'localhost',
 	});
 	let saving = $state(false);

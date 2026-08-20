@@ -26,7 +26,9 @@ const FLEET_INDEX = join(FLEET_ROOT, 'fleet.json');
 // so docker-compose.yml is one level up. Override with KRAKEN_TEMPLATE.
 const KRAKEN_TEMPLATE = process.env.KRAKEN_TEMPLATE
 	? path_resolve(process.env.KRAKEN_TEMPLATE)
-	: path_resolve(process.cwd(), '..');
+	: existsSync(path_resolve(process.cwd(), 'docker-compose.yml'))
+		? path_resolve(process.cwd())
+		: path_resolve(process.cwd(), '..');
 
 const ID_RE = /^[a-z][a-z0-9-]{1,30}$/;
 
@@ -70,7 +72,7 @@ function container_state(container) {
 	return new Promise(resolve => {
 		const proc = spawn('docker', [
 			'inspect', '--format',
-			'{{.State.Status}}|{{.State.Health.Status}}|{{.State.StartedAt}}',
+			'{{.State.Status}}|{{if .State.Health}}{{.State.Health.Status}}{{end}}|{{.State.StartedAt}}',
 			container,
 		]);
 		let buf = '';
@@ -230,7 +232,7 @@ export async function create_ship(input) {
 		CONTAINER_NAME: `windrose-${input.id}`,
 		HOSTNAME: input.hostname || 'localhost',
 		IMAGE_REPOSITORY: 'ghcr.io/uberdudepl/windrose-dedicated-server-docker',
-		IMAGE_TAG: input.image_tag || 'v1.6.2',
+		IMAGE_TAG: input.image_tag || 'v1.6.4',
 		PUID: '1000', PGID: '1000',
 		STEAM_LOGIN: 'anonymous', STEAM_PASS: '',
 		WINDROSE_APP_ID: '4129620',
@@ -339,8 +341,10 @@ export async function scuttle_ship(id, opts = {}) {
 	if (!ship) throw new Error(`no such ship: ${id}`);
 
 	await compose(ship.path, ['down'], 120_000);
-	if (opts.purge && ship.path.startsWith(FLEET_ROOT + '/')) {
-		await rm(ship.path, { recursive: true, force: true });
+	const resolved_path = path_resolve(ship.path);
+	const resolved_root = path_resolve(FLEET_ROOT);
+	if (opts.purge && resolved_path.startsWith(resolved_root + '/')) {
+		await rm(resolved_path, { recursive: true, force: true });
 	}
 	await write_index(ships.filter(s => s.id !== id));
 	return { ok: true };

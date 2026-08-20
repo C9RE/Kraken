@@ -126,7 +126,30 @@ DISCORD_WEBHOOK_URL="${DISCORD_WEBHOOK_URL:-$(dotenv_value DISCORD_WEBHOOK_URL |
 GOTIFY_URL="${GOTIFY_URL:-$(dotenv_value GOTIFY_URL || true)}"
 GOTIFY_TOKEN="${GOTIFY_TOKEN:-$(dotenv_value GOTIFY_TOKEN || true)}"
 GOTIFY_PRIORITY="${GOTIFY_PRIORITY:-$(dotenv_value GOTIFY_PRIORITY || true)}"
-GOTIFY_PRIORITY="${GOTIFY_PRIORITY:-5}"
+usage() {
+  cat <<EOF
+Windrose backup helper
+
+Usage:
+  $(basename "$0")
+  $(basename "$0") --help
+  $(basename "$0") -h
+  $(basename "$0") help
+
+Environment (.env or shell):
+  BACKUP_DIR=backups              # output directory (default: ./backups)
+  BACKUP_RETENTION_DAYS=7         # retention period in days (default: 7)
+  BACKUP_SCOPE=full|save|both     # backup scope (default: full)
+  BACKUP_FORMAT=tar.gz|zip        # archive format (default: tar.gz)
+  BACKUP_SKIP_ONLINE_CHECK=false  # skip checking for online players before backup
+EOF
+}
+
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" || "${1:-}" == "help" ]]; then
+  usage
+  exit 0
+fi
+
 TIMESTAMP="$(date +%F-%H%M%S)"
 declare -a CREATED_BACKUPS=()
 

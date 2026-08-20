@@ -1,7 +1,7 @@
 # Server data and saves — do not commit
-data/
-steam-home/
-game/
+/data/
+/steam-home/
+/game/
 
 # Secrets
 .env
@@ -20,12 +20,12 @@ diff.md
 brokol/
 
 # Local backups
-backups/
+/backups/
 
 # Runtime folders (logs, state, diagnostics)
-logs/
-state/
-diagnostics/
+/logs/
+/state/
+/diagnostics/
 
 # Docker build cache
 *.tar
