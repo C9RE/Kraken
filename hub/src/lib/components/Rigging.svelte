@@ -154,40 +154,85 @@
 
 	<!-- Upload zone -->
 	<div
-		class="drop"
+		class="drop-zone"
 		class:drag={drag_over}
 		ondragover={on_drag_over}
 		ondragleave={on_drag_leave}
 		ondrop={on_drop}
 		role="region"
-		aria-label="upload mod"
+		aria-label="Upload mod package"
 	>
-		<p class="drop-title">{busy === 'upload' ? 'installing…' : 'drop a mod here'}</p>
-		<p class="drop-sub">
-			<code>.zip</code> bundle (auto-detects UE4SS folder vs pak set) ·
-			<code>.lua</code>/<code>.dll</code> → UE4SS mod ·
-			<code>.pak</code>/<code>.ucas</code>/<code>.utoc</code> → Paks
-		</p>
-		<div class="drop-row">
-			<input bind:this={file_input} type="file" accept=".zip,.lua,.dll,.pak,.ucas,.utoc" onchange={on_pick} disabled={busy === 'upload'} />
+		<input
+			bind:this={file_input}
+			type="file"
+			accept=".zip,.lua,.dll,.pak,.ucas,.utoc"
+			onchange={on_pick}
+			disabled={busy === 'upload'}
+			class="hidden-file-input"
+		/>
+
+		<div class="drop-icon-wrap" class:busy={busy === 'upload'}>
+			{#if busy === 'upload'}
+				<span class="spinner" aria-hidden="true"></span>
+			{:else}
+				<svg class="drop-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+					<polyline points="17 8 12 3 7 8"/>
+					<line x1="12" y1="3" x2="12" y2="15"/>
+				</svg>
+			{/if}
 		</div>
-		<div class="drop-row">
-			<label class="inline">
-				<span>name override</span>
-				<input bind:value={upload_name} placeholder="(auto from filename)" disabled={busy === 'upload'} />
-			</label>
-			<label class="inline">
-				<span>target</span>
-				<select bind:value={upload_kind} disabled={busy === 'upload'}>
-					<option value="auto">auto</option>
-					<option value="ue4ss">UE4SS Mods/</option>
-					<option value="logic-pak">Paks/LogicMods/</option>
-					<option value="asset-pak">Paks/~mods/</option>
-				</select>
-			</label>
-			<label class="inline">
-				<span>enable</span>
-				<input type="checkbox" bind:checked={upload_enable} disabled={busy === 'upload'} />
+
+		<div class="drop-content">
+			<p class="drop-title">{busy === 'upload' ? 'Rigging Mod Package…' : 'Drop Mod Archive or Files Here'}</p>
+			<div class="format-pills mono">
+				<span class="format-pill"><strong>.zip</strong> bundle</span>
+				<span class="format-sep">·</span>
+				<span class="format-pill"><strong>.lua / .dll</strong> → UE4SS</span>
+				<span class="format-sep">·</span>
+				<span class="format-pill"><strong>.pak / .ucas</strong> → Paks</span>
+			</div>
+		</div>
+
+		<button
+			type="button"
+			class="btn btn-primary btn-browse"
+			onclick={() => file_input?.click()}
+			disabled={busy === 'upload'}
+		>
+			<span>Browse Files</span>
+		</button>
+	</div>
+
+	<!-- Upload configuration options well -->
+	<div class="upload-options">
+		<label class="opt-col">
+			<span class="opt-label">Mod Name Override</span>
+			<input
+				class="opt-input"
+				bind:value={upload_name}
+				placeholder="Auto-detected from file"
+				disabled={busy === 'upload'}
+			/>
+		</label>
+		<label class="opt-col">
+			<span class="opt-label">Install Target</span>
+			<select class="opt-select" bind:value={upload_kind} disabled={busy === 'upload'}>
+				<option value="auto">Auto-Detect Folder</option>
+				<option value="ue4ss">UE4SS (ue4ss/Mods/)</option>
+				<option value="logic-pak">Logic Mod (Paks/LogicMods/)</option>
+				<option value="asset-pak">Asset Mod (Paks/~mods/)</option>
+			</select>
+		</label>
+		<div class="opt-col opt-col-check">
+			<span class="opt-label">Initial State</span>
+			<label class="opt-toggle-box">
+				<input
+					type="checkbox"
+					bind:checked={upload_enable}
+					disabled={busy === 'upload'}
+				/>
+				<span class="opt-toggle-text">{upload_enable ? 'Enable on Install' : 'Keep Disabled'}</span>
 			</label>
 		</div>
 	</div>
@@ -296,37 +341,143 @@
 	}
 	.err { color: var(--color-crimson); margin: 0 0 16px; font-size: 13px; }
 
-	.drop {
-		border: 1px dashed var(--color-border-strong);
-		border-radius: 6px;
-		padding: 22px 20px;
+	/* ─── Upload zone ─────────────────────────────────────────── */
+	.drop-zone {
+		border: 1.5px dashed var(--color-border-strong);
+		border-radius: 8px;
+		padding: 24px 20px;
 		text-align: center;
-		background: rgba(12, 16, 21, 0.6);
+		background: rgba(10, 13, 17, 0.55);
 		display: flex;
 		flex-direction: column;
-		gap: 12px;
+		gap: 14px;
 		align-items: center;
-		margin-bottom: 22px;
-		transition: border-color 0.15s, background 0.15s;
+		margin-bottom: 14px;
+		transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+		position: relative;
 	}
-	.drop.drag { border-color: var(--color-accent-bright); background: var(--color-accent-soft); }
+	.drop-zone.drag {
+		border-color: var(--color-accent-bright);
+		background: var(--color-accent-soft);
+		box-shadow: 0 0 20px rgba(204, 185, 157, 0.2);
+	}
+	.hidden-file-input { display: none; }
+
+	.drop-icon-wrap {
+		width: 44px;
+		height: 44px;
+		border-radius: 50%;
+		background: rgba(204, 185, 157, 0.1);
+		border: 1px solid var(--color-border-strong);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: var(--color-accent-bright);
+	}
+	.drop-icon-wrap.busy { border-color: var(--color-accent); }
+	.drop-icon { opacity: 0.9; }
+
+	.drop-content { display: flex; flex-direction: column; gap: 6px; align-items: center; }
 	.drop-title {
-		font: 600 16px/1.2 var(--font-display);
+		font: 600 17px/1.2 var(--font-display);
 		color: #ffffff;
 		margin: 0;
+		letter-spacing: 0.02em;
 	}
-	.drop-sub { margin: 0; font-size: 12px; color: var(--color-ink-3); line-height: 1.6; }
-	.drop-sub code { font-family: var(--font-mono); font-size: 11px; background: var(--color-surface-3); padding: 1px 4px; border-radius: 4px; color: var(--color-accent-bright); }
-	.drop-row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: center; }
-	.drop input[type="file"] { padding: 6px 8px; border-radius: 6px; }
-	.inline { flex-direction: row; align-items: center; gap: 8px; }
-	.inline span { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent); font-weight: 600; }
 
-	.mods {
-		width: 100%;
-		border-collapse: collapse;
-		font-size: 13px;
+	.format-pills {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 11px;
+		color: var(--color-ink-3);
+		flex-wrap: wrap;
+		justify-content: center;
 	}
+	.format-pill {
+		background: rgba(255, 255, 255, 0.04);
+		padding: 3px 8px;
+		border-radius: 4px;
+		border: 1px solid var(--color-border);
+	}
+	.format-pill strong { color: var(--color-accent-bright); }
+	.format-sep { opacity: 0.3; }
+
+	.btn-browse {
+		height: 36px;
+		padding: 0 20px;
+	}
+
+	/* ─── Upload options well ─────────────────────────────────── */
+	.upload-options {
+		display: grid;
+		grid-template-columns: 1.2fr 1fr auto;
+		gap: 14px;
+		align-items: flex-end;
+		padding: 14px 16px;
+		background: rgba(14, 18, 23, 0.6);
+		border: 1px solid var(--color-border);
+		border-radius: 6px;
+		margin-bottom: 22px;
+	}
+	@media (max-width: 720px) {
+		.upload-options { grid-template-columns: 1fr; }
+	}
+
+	.opt-col { display: flex; flex-direction: column; gap: 5px; }
+	.opt-col-check { justify-content: flex-end; }
+	.opt-label {
+		font-size: 10.5px;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--color-accent);
+	}
+	.opt-input, .opt-select {
+		height: 36px;
+		font-size: 12.5px;
+		padding: 0 10px;
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border-strong);
+		border-radius: 6px;
+	}
+	.opt-toggle-box {
+		height: 36px;
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		padding: 0 12px;
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border-strong);
+		border-radius: 6px;
+		cursor: pointer;
+		user-select: none;
+	}
+	.opt-toggle-box input[type="checkbox"] {
+		width: 15px;
+		height: 15px;
+		accent-color: var(--color-accent);
+		cursor: pointer;
+		margin: 0;
+	}
+	.opt-toggle-text {
+		font-size: 12px;
+		color: var(--color-ink-2);
+		font-weight: 500;
+		white-space: nowrap;
+	}
+
+	/* Spinner */
+	.spinner {
+		width: 16px;
+		height: 16px;
+		border-radius: 50%;
+		border: 2px solid var(--color-border-strong);
+		border-top-color: var(--color-accent-bright);
+		animation: spin 0.7s linear infinite;
+		display: inline-block;
+	}
+	@keyframes spin { to { transform: rotate(360deg); } }
 	.mods thead th {
 		text-align: left;
 		font: 700 10px/1 var(--font-body);
