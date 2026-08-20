@@ -1,0 +1,13 @@
+; UE4SS Mods registry
+BPML_GenericFunctions : 1
+BPModLoaderMod : 1
+CheatManagerEnablerMod : 0
+ConsoleCommandsMod : 1
+ConsoleEnablerMod : 0
+LineTraceMod : 0
+WindrosePlus : 1
+ShipCompassMod : 1
+HighSeasLoot : 1
+
+; Built-in keybinds (MUST BE LAST)
+Keybinds : 1

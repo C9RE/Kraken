@@ -1,0 +1,23 @@
+[
+  {
+    "id": "black-pearl",
+    "name": "The Black Pearl",
+    "path": "/home/law/core/kraken/demo-fleet/black-pearl",
+    "created_at": 1787223818,
+    "notes": "Official Kraken PvPvE Flagship"
+  },
+  {
+    "id": "queen-anne",
+    "name": "Queen Anne's Revenge",
+    "path": "/home/law/core/kraken/demo-fleet/queen-anne",
+    "created_at": 1787195018,
+    "notes": "Co-op exploration and treasure hunting"
+  },
+  {
+    "id": "flying-dutchman",
+    "name": "The Flying Dutchman",
+    "path": "/home/law/core/kraken/demo-fleet/flying-dutchman",
+    "created_at": 1787195019,
+    "notes": "Hardcore survival voyage"
+  }
+]

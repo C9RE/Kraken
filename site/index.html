@@ -260,6 +260,37 @@
     }
     .btn-nav:active { transform: scale(0.96); }
 
+    .btn-demo-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(204, 185, 157, 0.12);
+      border: 1px solid var(--gold-border-bright);
+      color: var(--gold-bright);
+      padding: 6px 12px;
+      font-size: 12.5px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    }
+    .btn-demo-link:hover {
+      background: var(--gold-bright);
+      color: #080a0d;
+      transform: translateY(-1px);
+    }
+    .btn-demo-link:active { transform: scale(0.96); }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 8px #4ade80;
+      display: inline-block;
+    }
+
     .nav-stars, .hero-star-pill {
       display: inline-flex;
       align-items: center;
@@ -907,6 +938,10 @@
         <a href="#rigging" class="nav-link">Rigging</a>
         <a href="#deploy" class="nav-link">Deploy</a>
         <a href="#faq" class="nav-link">FAQ</a>
+        <a href="https://demo.thekraken.cloud" class="btn-demo-link" target="_blank" rel="noopener">
+          <span class="live-dot"></span>
+          <span>Live Demo ↗</span>
+        </a>
         <a href="https://github.com/C9RE/Kraken" class="btn-nav" target="_blank" rel="noopener" aria-label="Kraken repository on GitHub">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
           <span>GitHub</span>
@@ -931,12 +966,16 @@
         </p>
 
         <div class="hero-actions">
-          <a href="https://github.com/C9RE/Kraken" class="btn-primary" target="_blank" rel="noopener">
+          <a href="https://demo.thekraken.cloud" class="btn-primary" target="_blank" rel="noopener">
+            <span class="live-dot" style="background:#080a0d;box-shadow:0 0 6px rgba(8,10,13,0.4);"></span>
+            <span>Launch Live Demo ↗</span>
+          </a>
+          <a href="https://github.com/C9RE/Kraken" class="btn-secondary" target="_blank" rel="noopener">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
             <span>Star on GitHub</span>
             <span class="hero-star-pill" id="heroStarCount">★ <span class="num">Star</span></span>
           </a>
-          <a href="#deploy" class="btn-secondary">
+          <a href="#deploy" class="btn-secondary" style="background:transparent;border-color:rgba(204,185,157,0.2);">
             <span>Quickstart Guide ↓</span>
           </a>
         </div>

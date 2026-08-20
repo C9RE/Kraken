@@ -112,26 +112,36 @@
 <style>
 	.ship {
 		background: var(--color-surface);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
 		border: 1px solid var(--color-border);
 		border-left: 3px solid var(--color-accent);
-		border-radius: 2px;
-		padding: 22px 24px;
+		border-radius: 8px;
+		padding: 24px;
 		display: flex;
 		flex-direction: column;
 		gap: 18px;
-		transition: background 0.15s, border-color 0.15s;
+		box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+		transition: background 0.15s, border-color 0.15s, transform 0.15s, box-shadow 0.15s;
 	}
-	.ship:hover { background: var(--color-surface-2); border-color: var(--color-border-strong); border-left-color: var(--color-accent-bright); }
+	.ship:hover {
+		background: var(--color-surface-2);
+		border-color: var(--color-border-strong);
+		border-left-color: var(--color-accent-bright);
+		transform: translateY(-2px);
+		box-shadow: 0 8px 28px -4px rgba(0, 0, 0, 0.6);
+	}
 
 	.head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 	.title { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 	.name {
-		font: 600 22px/1.1 var(--font-display);
+		font: 700 22px/1.1 var(--font-display);
 		color: var(--color-ink);
 		text-decoration: none;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+		letter-spacing: 0.02em;
 	}
 	.name:hover { color: var(--color-accent-bright); }
 	.id {
@@ -141,7 +151,7 @@
 	}
 
 	.status { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }
-	.status-label { font-size: 11px; color: var(--color-ink-3); letter-spacing: 0.08em; }
+	.status-label { font-size: 11.5px; color: var(--color-ink-2); letter-spacing: 0.06em; }
 
 	.meta {
 		display: grid;
@@ -170,7 +180,7 @@
 		display: inline-flex;
 		gap: 0;
 		border: 1px solid var(--color-border-strong);
-		border-radius: 2px;
+		border-radius: 6px;
 		overflow: hidden;
 		background: var(--color-surface);
 	}
@@ -188,7 +198,7 @@
 		color: var(--color-ink-3);
 		font-family: var(--font-body);
 		cursor: pointer;
-		transition: background 0.15s, color 0.15s, transform 0.15s;
+		transition: background 0.15s, color 0.15s, transform 0.1s;
 	}
 	.icon-btn:last-child { border-right: 0; }
 	.icon-btn .glyph {
@@ -199,10 +209,9 @@
 	.icon-btn:hover:not(:disabled) {
 		background: var(--color-accent-soft);
 		color: var(--color-accent-bright);
-		transform: translateY(-1px);
 	}
 	.icon-btn.danger:hover:not(:disabled) {
-		background: rgba(176, 77, 62, 0.12);
+		background: rgba(176, 77, 62, 0.15);
 		color: var(--color-crimson);
 	}
 	.icon-btn:focus-visible {
@@ -210,7 +219,7 @@
 		box-shadow: inset 0 0 0 1px var(--color-border-focus);
 		color: var(--color-accent-bright);
 	}
-	.icon-btn:active:not(:disabled) { transform: translateY(0); }
+	.icon-btn:active:not(:disabled) { transform: scale(0.94); }
 	.icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 	/* Boarding primary CTA — right-anchored, weightier */
@@ -223,15 +232,15 @@
 		padding: 0 16px;
 		background: var(--color-accent-soft);
 		border: 1px solid var(--color-accent);
-		border-radius: 2px;
+		border-radius: 6px;
 		color: var(--color-accent-bright);
 		font-family: var(--font-body);
 		font-size: 11px;
-		font-weight: 600;
+		font-weight: 700;
 		letter-spacing: 0.16em;
 		text-transform: uppercase;
 		text-decoration: none;
-		transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
+		transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.12s;
 	}
 	.cta .cta-arrow {
 		font-size: 14px;
@@ -240,7 +249,7 @@
 	.cta:hover {
 		background: var(--color-accent);
 		border-color: var(--color-accent-bright);
-		color: #131212;
+		color: #080a0d;
 		transform: translateY(-1px);
 	}
 	.cta:hover .cta-arrow { transform: translateX(3px); }
@@ -248,7 +257,7 @@
 		outline: none;
 		box-shadow: 0 0 0 2px var(--color-border-focus);
 	}
-	.cta:active { transform: translateY(0); }
+	.cta:active { transform: scale(0.96); }
 
 	/* Ghost variant of CTA — used alongside Cast off (moored state) */
 	.cta.ghost {
@@ -271,29 +280,29 @@
 		height: 36px;
 		padding: 0 18px;
 		background: var(--color-accent);
-		border: 1px solid var(--color-accent);
-		border-radius: 2px;
-		color: #131212;
+		border: 1px solid var(--color-accent-bright);
+		border-radius: 6px;
+		color: #080a0d;
 		font-family: var(--font-body);
 		font-size: 11px;
 		font-weight: 700;
 		letter-spacing: 0.16em;
 		text-transform: uppercase;
 		cursor: pointer;
-		transition: background 0.15s, border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+		transition: background 0.15s, border-color 0.15s, transform 0.12s, box-shadow 0.15s;
 	}
 	.cast-off .anchor { font-size: 15px; line-height: 1; }
 	.cast-off:hover:not(:disabled) {
 		background: var(--color-accent-bright);
-		border-color: var(--color-accent-bright);
+		border-color: #ffffff;
 		transform: translateY(-1px);
-		box-shadow: 0 4px 12px rgba(154, 127, 62, 0.25);
+		box-shadow: 0 4px 14px rgba(204, 185, 157, 0.35);
 	}
 	.cast-off:focus-visible {
 		outline: none;
 		box-shadow: 0 0 0 2px var(--color-border-focus);
 	}
-	.cast-off:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
+	.cast-off:active:not(:disabled) { transform: scale(0.96); box-shadow: none; }
 	.cast-off:disabled { opacity: 0.55; cursor: not-allowed; }
 
 	/* Disable sibling interaction during busy state */

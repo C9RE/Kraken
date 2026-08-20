@@ -1,0 +1,20 @@
+{
+  "WorldName": "World_01",
+  "DifficultyPreset": "Hard",
+  "CombatDifficulty": "Hard",
+  "Floats": {
+    "DamageToPlayers": 1.5,
+    "DamageFromPlayers": 0.8,
+    "ExpMultiplier": 1.25,
+    "MobHealthMultiplier": 1.5,
+    "LootDropMultiplier": 1.2,
+    "ShipSpeedMultiplier": 1,
+    "DurabilityLossMultiplier": 0.85
+  },
+  "Bools": {
+    "EnablePvP": true,
+    "KeepInventoryOnDeath": false,
+    "EasyExplore": false,
+    "DynamicWeather": true
+  }
+}

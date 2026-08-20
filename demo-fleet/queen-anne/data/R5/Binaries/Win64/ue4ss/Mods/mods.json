@@ -1,0 +1,12 @@
+{
+  "BPML_GenericFunctions": true,
+  "BPModLoaderMod": true,
+  "CheatManagerEnablerMod": false,
+  "ConsoleCommandsMod": true,
+  "ConsoleEnablerMod": false,
+  "Keybinds": true,
+  "LineTraceMod": false,
+  "WindrosePlus": true,
+  "ShipCompassMod": true,
+  "HighSeasLoot": true
+}
