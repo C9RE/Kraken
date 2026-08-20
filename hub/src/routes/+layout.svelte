@@ -11,6 +11,8 @@
 	<title>{is_demo ? 'Kraken Demo — Windrose Server Sandbox' : 'Kraken Hub — Windrose Fleet Manager'}</title>
 </svelte:head>
 
+<div class="fixed-backdrop" aria-hidden="true"></div>
+
 <div class="app" class:bare={!chrome}>
 	{#if is_demo}
 		<div class="demo-banner">
@@ -38,7 +40,7 @@
 </div>
 
 <style>
-	.app { display: flex; flex-direction: column; min-height: 100dvh; }
+	.app { display: flex; flex-direction: column; min-height: 100dvh; position: relative; z-index: 1; }
 	.app.bare main { padding: 0; max-width: none; }
 	main { flex: 1; padding: 36px 24px 64px; max-width: 1200px; width: 100%; margin: 0 auto; box-sizing: border-box; }
 	

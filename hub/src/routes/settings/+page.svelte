@@ -172,25 +172,32 @@
 	}
 </script>
 
-<section class="hero">
-	<p class="kicker italic">behind the wheel</p>
-	<h1 class="serif">settings</h1>
+<section class="settings-header">
+	<div class="nav-breadcrumbs">
+		<a href="/" class="back-link">← Harbor Fleet</a>
+	</div>
+	<p class="kicker italic">Command &amp; Diagnostics</p>
+	<h1 class="serif">Hub Settings</h1>
 	<p class="hero-sub">
-		hub version, paths, and one-click update. no auth here, no telemetry, nothing fancy.
+		Hub software orchestration, systemd execution environment, git deployment stream, and optional security PIN authentication.
 	</p>
 </section>
 
 {#if loading}
-	<p class="muted">loading...</p>
+	<div class="loading-state card">
+		<p class="loading mono">Loading system diagnostics…</p>
+	</div>
 {:else if error && !s?.repo_dir}
-	<p class="err">error: {error}</p>
+	<div class="err-card card">
+		<p class="err mono">System error: {error}</p>
+	</div>
 {:else if s}
 
 	<!-- Updates panel -->
 	<article class="card">
 		<header class="card-head">
-			<h2 class="serif">updates</h2>
-			<p>pulls from <code>{s.remote_url || 'origin'}</code> on branch <code>{s.branch}</code>.</p>
+			<h2 class="serif">Software Stream</h2>
+			<p>Upstream repository: <code>{s.remote_url || 'origin'}</code> on branch <code>{s.branch}</code>.</p>
 		</header>
 
 		{#if s.error}
@@ -201,7 +208,7 @@
 				<span class="status-line" class:warn-text={s.update_available}>{update_status}</span>
 			</div>
 
-			{#if toast}<p class="toast">{toast}</p>{/if}
+			{#if toast}<div class="toast mono">{toast}</div>{/if}
 
 			<div class="action-row">
 				<button class="btn btn-ghost" onclick={check_now} disabled={updating}>Check for updates</button>
@@ -229,11 +236,10 @@
 	<!-- PIN auth -->
 	<article class="card">
 		<header class="card-head">
-			<h2 class="serif">PIN login</h2>
+			<h2 class="serif">Security PIN Access</h2>
 			<p>
-				lock the hub behind a 4 to 12 digit PIN. off by default.
-				stored hashed (scrypt) at <code>{s.repo_dir ? `$KRAKEN_FLEET_ROOT/auth.json` : 'auth.json'}</code>.
-				rate limited: 5 wrong PINs in 15 minutes triggers a 15 minute lockout per IP.
+				Lock the hub dashboard behind a 4 to 12 digit PIN. Off by default.
+				Stored hashed (scrypt) with brute-force rate limiting (5 failed attempts locks for 15 minutes).
 			</p>
 		</header>
 
@@ -251,7 +257,7 @@
 			{/if}
 		</div>
 
-		{#if pin_msg}<p class="toast">{pin_msg}</p>{/if}
+		{#if pin_msg}<div class="toast mono">{pin_msg}</div>{/if}
 
 		{#if auth?.has_pin}
 			<div class="pin-row pin-row-current">
@@ -330,13 +336,13 @@
 	<!-- System info -->
 	<article class="card">
 		<header class="card-head">
-			<h2 class="serif">system</h2>
-			<p>where the hub is running and what it sees on disk.</p>
+			<h2 class="serif">Environment &amp; Runtime</h2>
+			<p>Host server runtime configuration and active storage filesystem.</p>
 		</header>
 		<dl class="kv">
 			<div><dt>version</dt><dd class="mono">{s.version || '0.0.0'}</dd></div>
 			<div><dt>pid</dt><dd class="mono">{s.pid}</dd></div>
-			<div><dt>node</dt><dd class="mono">{s.node_version}</dd></div>
+			<div><dt>node / bun</dt><dd class="mono">{s.node_version}</dd></div>
 			<div><dt>uptime</dt><dd class="mono">{fmt_uptime(s.uptime_seconds)}</dd></div>
 			<div><dt>repo</dt><dd class="mono path">{s.repo_dir}</dd></div>
 			<div><dt>hub</dt><dd class="mono path">{s.hub_dir}</dd></div>
@@ -348,49 +354,49 @@
 	<!-- Restart strategy -->
 	<article class="card">
 		<header class="card-head">
-			<h2 class="serif">restart strategy</h2>
-			<p>what happens when you click "apply update".</p>
+			<h2 class="serif">Process Daemon Strategy</h2>
+			<p>Automated restart behaviour upon receiving software updates.</p>
 		</header>
 		{#if s.systemd_unit}
-			<p>running under systemd unit <code>{s.systemd_unit}</code>. after build, the hub exits cleanly and systemd's <code>Restart=always</code> brings it back with the new binary.</p>
+			<p>Running under systemd unit <code>{s.systemd_unit}</code>. Upon applying updates, the hub process restarts automatically with updated binaries.</p>
 		{:else}
-			<p>no systemd unit set (<code>KRAKEN_SYSTEMD_UNIT</code> env var is empty). the hub will spawn a detached <code>update.sh restart</code>, which kills our pid and re-execs <code>bun run start</code> from <code>{s.hub_dir}</code>.</p>
-			<p class="muted small">
-				for the cleanest experience, wrap the hub in a systemd unit. example:
-			</p>
-			<pre class="snippet mono">[Unit]
-Description=Kraken Hub
-After=network.target docker.service
-
-[Service]
-Type=simple
-User={'{user}'}
-WorkingDirectory={s.hub_dir}
-Environment=KRAKEN_FLEET_ROOT=/srv/kraken-fleet
-Environment=KRAKEN_TEMPLATE={s.repo_dir}
-Environment=KRAKEN_SYSTEMD_UNIT=kraken-hub
-Environment=PORT=8783
-Environment=HOST=0.0.0.0
-ExecStart=/usr/bin/bun run start
-Restart=always
-RestartSec=2
-
-[Install]
-WantedBy=multi-user.target</pre>
+			<p>No systemd unit detected (<code>KRAKEN_SYSTEMD_UNIT</code> is unset). Falling back to detached process re-execution from <code>{s.hub_dir}</code>.</p>
 		{/if}
 	</article>
 {/if}
 
 <style>
-	.hero { margin-bottom: 32px; max-width: 720px; }
-	.hero h1 { font-size: 44px; font-weight: 600; margin: 4px 0 12px; }
-	.hero-sub { font-size: 15px; color: var(--color-ink-2); line-height: 1.6; }
+	.settings-header {
+		margin-bottom: 28px;
+		max-width: 740px;
+		padding-bottom: 20px;
+		border-bottom: 1px solid var(--color-border);
+	}
+	.nav-breadcrumbs { margin-bottom: 8px; }
+	.back-link {
+		font-family: var(--font-mono);
+		font-size: 11.5px;
+		letter-spacing: 0.08em;
+		color: var(--color-accent);
+		text-transform: uppercase;
+	}
+	.back-link:hover { color: #ffffff; }
+
+	.settings-header h1 {
+		font-size: 38px;
+		font-weight: 700;
+		margin: 4px 0 10px;
+		color: #ffffff;
+		letter-spacing: 0.03em;
+		text-shadow: 0 2px 14px rgba(0,0,0,0.8);
+	}
+	.hero-sub { font-size: 14.5px; color: var(--color-ink-2); line-height: 1.6; margin: 0; }
 
 	.card { margin-bottom: 24px; }
 	.card-head { padding-bottom: 14px; margin-bottom: 18px; border-bottom: 1px solid var(--color-border); }
-	.card-head h2 { font-size: 22px; font-weight: 500; margin: 0 0 4px; }
-	.card-head p { color: var(--color-ink-3); margin: 0; font-size: 13px; }
-	.card-head code, code { font-family: var(--font-mono); font-size: 11px; background: var(--color-surface-2); padding: 1px 5px; border-radius: 2px; color: var(--color-ink-2); }
+	.card-head h2 { font-size: 20px; font-weight: 600; margin: 0 0 4px; color: #ffffff; }
+	.card-head p { color: var(--color-ink-2); margin: 0; font-size: 13px; }
+	.card-head code, code { font-family: var(--font-mono); font-size: 11px; background: var(--color-surface-2); padding: 1px 5px; border-radius: 4px; color: var(--color-accent-bright); }
 
 	/* Updates panel — clean version summary */
 	.version-summary {
@@ -401,21 +407,22 @@ WantedBy=multi-user.target</pre>
 		padding: 22px 16px;
 		margin-bottom: 18px;
 		border: 1px solid var(--color-border);
-		border-radius: 2px;
-		background: var(--color-surface-2);
+		border-radius: 6px;
+		background: rgba(14, 18, 23, 0.6);
 	}
 	.version-chip {
 		font-size: 22px;
-		font-weight: 600;
+		font-weight: 700;
 		letter-spacing: 0.04em;
-		color: var(--color-accent);
-		padding: 4px 14px;
+		color: var(--color-accent-bright);
+		padding: 4px 16px;
 		border: 1px solid var(--color-accent);
-		border-radius: 2px;
+		border-radius: 6px;
 		background: var(--color-accent-soft);
 	}
 	.version-chip.behind {
-		color: var(--color-accent-bright, var(--color-accent));
+		color: #ffffff;
+		border-color: var(--color-accent-bright);
 	}
 	.status-line {
 		font-size: 12px;
@@ -427,38 +434,24 @@ WantedBy=multi-user.target</pre>
 		color: var(--color-rust);
 	}
 
-	.muted { color: var(--color-ink-3); }
-	.small { font-size: 12px; }
-
-	.warn {
-		padding: 14px 16px;
-		margin-bottom: 18px;
-		border: 1px solid var(--color-rust);
-		background: rgba(192, 112, 74, 0.08);
-		border-radius: 2px;
-		font-size: 13px;
-	}
-	.warn strong { color: var(--color-rust); }
-	.warn p { margin: 4px 0 0; color: var(--color-ink-2); }
-
 	.toast {
-		background: var(--color-accent-soft);
-		border: 1px solid var(--color-accent);
-		color: var(--color-accent-bright);
+		background: rgba(204, 185, 157, 0.15);
+		border: 1px solid var(--color-accent-bright);
+		color: #ffffff;
 		padding: 10px 14px;
-		border-radius: 2px;
+		border-radius: 6px;
 		font-size: 13px;
 		margin-bottom: 16px;
 	}
 
 	.action-row { display: flex; gap: 10px; align-items: center; }
 
-	.log-block { margin-top: 18px; border: 1px solid var(--color-border); border-radius: 2px; }
+	.log-block { margin-top: 18px; border: 1px solid var(--color-border); border-radius: 6px; }
 	.log-block summary { cursor: pointer; padding: 10px 14px; font-weight: 600; font-size: 12px; color: var(--color-ink-2); }
 	.log-step { padding: 8px 14px; border-top: 1px solid var(--color-border); }
 	.log-step.fail .log-name { color: var(--color-crimson); }
 	.log-name { font-size: 11px; color: var(--color-sage); display: block; margin-bottom: 4px; letter-spacing: 0.04em; }
-	.log-out { background: var(--color-surface-2); padding: 8px 10px; border-radius: 2px; font-size: 11px; line-height: 1.5; max-height: 200px; overflow: auto; margin: 0; white-space: pre-wrap; word-break: break-word; color: var(--color-ink-3); }
+	.log-out { background: rgba(5, 7, 9, 0.85); padding: 8px 10px; border-radius: 4px; font-size: 11px; line-height: 1.5; max-height: 200px; overflow: auto; margin: 0; white-space: pre-wrap; word-break: break-word; color: var(--color-ink-2); }
 
 	/* PIN auth — state header */
 	.auth-state {
@@ -468,9 +461,9 @@ WantedBy=multi-user.target</pre>
 		gap: 16px;
 		padding: 12px 14px;
 		margin-bottom: 18px;
-		background: var(--color-surface-2);
+		background: rgba(14, 18, 23, 0.6);
 		border: 1px solid var(--color-border);
-		border-radius: 2px;
+		border-radius: 6px;
 	}
 	.auth-state-badges {
 		display: flex;
@@ -482,7 +475,7 @@ WantedBy=multi-user.target</pre>
 		text-transform: uppercase;
 		letter-spacing: 0.18em;
 		padding: 6px 10px;
-		border-radius: 2px;
+		border-radius: 4px;
 		border: 1px solid var(--color-border);
 		color: var(--color-ink-3);
 		background: transparent;
@@ -494,8 +487,9 @@ WantedBy=multi-user.target</pre>
 	}
 
 	.btn-sm {
-		font-size: 12px;
-		padding: 6px 12px;
+		font-size: 11px;
+		min-height: 32px;
+		padding: 0 12px;
 	}
 	.btn-block {
 		display: block;
@@ -522,7 +516,8 @@ WantedBy=multi-user.target</pre>
 	}
 	.pin-label {
 		font-size: 11px;
-		color: var(--color-ink-4);
+		color: var(--color-accent);
+		font-weight: 600;
 		letter-spacing: 0.14em;
 		text-transform: uppercase;
 	}
@@ -536,7 +531,7 @@ WantedBy=multi-user.target</pre>
 		color: var(--color-ink);
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
-		border-radius: 2px;
+		border-radius: 6px;
 		box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
 		outline: none;
 		transition: border-color 120ms ease, box-shadow 120ms ease;
@@ -548,25 +543,19 @@ WantedBy=multi-user.target</pre>
 	}
 	.pin-input:focus {
 		border-color: var(--color-accent);
-		box-shadow:
-			inset 0 1px 2px rgba(0, 0, 0, 0.25),
-			0 0 0 1px var(--color-accent);
+		box-shadow: 0 0 0 2px rgba(204, 185, 157, 0.2);
 	}
 	.pin-input.valid {
 		border-color: var(--color-sage);
 	}
 	.pin-input.valid:focus {
-		box-shadow:
-			inset 0 1px 2px rgba(0, 0, 0, 0.25),
-			0 0 0 1px var(--color-sage);
+		box-shadow: 0 0 0 2px rgba(104, 186, 140, 0.2);
 	}
 	.pin-input.invalid {
 		border-color: var(--color-rust);
 	}
 	.pin-input.invalid:focus {
-		box-shadow:
-			inset 0 1px 2px rgba(0, 0, 0, 0.25),
-			0 0 0 1px var(--color-rust);
+		box-shadow: 0 0 0 2px rgba(192, 112, 74, 0.2);
 	}
 	.pin-input:disabled {
 		opacity: 0.6;
@@ -603,17 +592,7 @@ WantedBy=multi-user.target</pre>
 	dd { color: var(--color-ink-2); margin: 0; font-size: 12px; }
 	.path { word-break: break-all; text-align: right; }
 
-	.snippet {
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		border-radius: 2px;
-		padding: 12px 14px;
-		margin: 8px 0 0;
-		font-size: 11.5px;
-		line-height: 1.5;
-		color: var(--color-ink-2);
-		overflow: auto;
-	}
-
+	.loading-state, .err-card { text-align: center; padding: 56px 28px; max-width: 600px; margin: 40px auto; }
+	.loading { color: var(--color-accent-bright); }
 	.err { color: var(--color-crimson); }
 </style>

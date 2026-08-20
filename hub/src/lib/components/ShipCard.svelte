@@ -112,8 +112,8 @@
 <style>
 	.ship {
 		background: var(--color-surface);
-		backdrop-filter: blur(12px);
-		-webkit-backdrop-filter: blur(12px);
+		backdrop-filter: blur(14px);
+		-webkit-backdrop-filter: blur(14px);
 		border: 1px solid var(--color-border);
 		border-left: 3px solid var(--color-accent);
 		border-radius: 8px;
@@ -121,7 +121,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 18px;
-		box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+		box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
 		transition: background 0.15s, border-color 0.15s, transform 0.15s, box-shadow 0.15s;
 	}
 	.ship:hover {
@@ -136,7 +136,8 @@
 	.title { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 	.name {
 		font: 700 22px/1.1 var(--font-display);
-		color: var(--color-ink);
+		color: #ffffff;
+		text-shadow: 0 2px 8px rgba(0,0,0,0.7);
 		text-decoration: none;
 		overflow: hidden;
 		text-overflow: ellipsis;

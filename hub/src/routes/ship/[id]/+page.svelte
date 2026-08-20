@@ -166,52 +166,63 @@
 </script>
 
 {#if loading && !ship}
-	<p class="loading">boarding…</p>
+	<div class="loading-state card">
+		<p class="loading mono">Boarding vessel bridge…</p>
+	</div>
 {:else if error}
-	<p class="err">error: {error} · <a href="/">back to fleet</a></p>
+	<div class="err-card card">
+		<p class="err mono">Vessel bridge unreachable: {error}</p>
+		<a href="/" class="btn btn-ghost">← Return to Harbor Fleet</a>
+	</div>
 {:else if ship}
 	<header class="bridge-head">
-		<div>
-			<p class="kicker italic">bridge of</p>
+		<div class="bridge-info">
+			<div class="nav-breadcrumbs">
+				<a href="/" class="back-link">← Harbor Fleet</a>
+			</div>
 			<h1 class="serif">{ship.env.SERVER_NAME || ship.name}</h1>
-			<p class="sub">
-				<span class="dot" class:on={ship.active} class:warn={ship.health === 'unhealthy'}></span>
-				<span class="mono">{ship.active ? `afloat · ${fmt_uptime(uptime_secs)}` : 'moored'}</span>
+			<div class="status-pills mono">
+				<span class="status-pill" class:on={ship.active}>
+					<span class="dot" class:on={ship.active} class:warn={ship.health === 'unhealthy'}></span>
+					<span>{ship.active ? `Afloat · ${fmt_uptime(uptime_secs)}` : 'Moored in Harbor'}</span>
+				</span>
 				<span class="sep">·</span>
-				<span class="mono">{ship.id}</span>
+				<span class="id-pill">id: {ship.id}</span>
 				<span class="sep">·</span>
-				<span class="mono">{ship.env.IMAGE_TAG || ship.image_tag}</span>
-			</p>
+				<span class="port-pill">port: {ship.env.PORT || ship.port}</span>
+				<span class="sep">·</span>
+				<span class="ver-pill">{ship.env.IMAGE_TAG || ship.image_tag || 'v1.6.4'}</span>
+			</div>
 		</div>
-		<div class="actions">
+		<div class="bridge-actions">
 			{#if ship.active}
-				<button class="btn btn-ghost" disabled={!!busy} onclick={() => act('restart')}>
-					{busy === 'restart' ? '…' : 'Restart'}
+				<button class="btn btn-ghost" disabled={!!busy} onclick={() => act('restart')} title="Restart server container">
+					{busy === 'restart' ? 'restarting…' : '↻ Restart'}
 				</button>
-				<button class="btn btn-danger" disabled={!!busy} onclick={() => act('stop')}>
-					{busy === 'stop' ? '…' : 'Stop'}
+				<button class="btn btn-danger" disabled={!!busy} onclick={() => act('stop')} title="Stop server container">
+					{busy === 'stop' ? 'stopping…' : '■ Moor (Stop)'}
 				</button>
 			{:else}
-				<button class="btn btn-primary" disabled={!!busy} onclick={() => act('start')}>
-					{busy === 'start' ? 'starting…' : 'Cast off'}
+				<button class="btn btn-primary btn-cast" disabled={!!busy} onclick={() => act('start')} title="Launch dedicated server container">
+					{busy === 'start' ? 'casting off…' : '⚓ Cast Off (Start)'}
 				</button>
 			{/if}
 		</div>
 	</header>
 
-	{#if toast}<p class="toast">{toast}</p>{/if}
+	{#if toast}<div class="toast mono">{toast}</div>{/if}
 
 	<section class="grid">
-		<!-- LEFT - settings -->
+		<!-- LEFT - settings & voyage -->
 		<div class="col">
 			<article class="card">
 				<header class="card-head">
-					<h2 class="serif">manifest &amp; settings</h2>
-					<p>edit the ship's configuration. saved values land in <code>.env</code>; restart to take effect.</p>
+					<h2 class="serif">Manifest &amp; Settings</h2>
+					<p>Dedicated server stack configuration. Values persist in <code>.env</code>; restart container to apply.</p>
 				</header>
 				<div class="fields">
 					{#each FIELDS as f}
-						<label>
+						<label class="field-label">
 							<span>{f.label}</span>
 							{#if f.kind === 'bool'}
 								<select bind:value={env_draft[f.key]}>
@@ -228,9 +239,9 @@
 					{/each}
 				</div>
 				<footer class="form-foot">
-					<span class="hint mono">{dirty ? '⬤ unsaved changes' : '○ no changes'}</span>
+					<span class="hint mono">{dirty ? '⬤ Unsaved configuration changes' : '○ Configuration synchronized'}</span>
 					<button class="btn btn-primary" disabled={!dirty || !!busy} onclick={save_env}>
-						{busy === 'save' ? 'saving…' : 'Save settings'}
+						{busy === 'save' ? 'saving…' : 'Save Settings'}
 					</button>
 				</footer>
 			</article>
@@ -239,68 +250,74 @@
 
 			<article class="card">
 				<header class="card-head">
-					<h2 class="serif">refit</h2>
-					<p>pull the latest image and re-launch. equivalent to <code>docker compose pull &amp;&amp; up -d</code>.</p>
+					<h2 class="serif">Drydock Refit</h2>
+					<p>Pull latest Windrose Docker image and recreate container. Safe hot-restart.</p>
 				</header>
 				<div class="row gap">
-					<button class="btn" disabled={!!busy} onclick={() => act('pull')}>
-						{busy === 'pull' ? 'pulling…' : 'Pull image only'}
+					<button class="btn btn-ghost" disabled={!!busy} onclick={() => act('pull')}>
+						{busy === 'pull' ? 'pulling…' : 'Pull Image'}
 					</button>
 					<button class="btn btn-primary" disabled={!!busy} onclick={() => act('refit')}>
-						{busy === 'refit' ? 'refitting…' : 'Refit (pull + restart)'}
+						{busy === 'refit' ? 'refitting…' : 'Refit & Restart Stack'}
 					</button>
 				</div>
 			</article>
 
 			<article class="card danger">
 				<header class="card-head">
-					<h2 class="serif">scuttle</h2>
-					<p>permanently delete this ship and all its files. there is no recovery short of a backup tarball.</p>
+					<h2 class="serif">Scuttle Vessel</h2>
+					<p>Permanently remove this ship and wipe directory contents. Ensure you have backups saved.</p>
 				</header>
 				<button class="btn btn-danger" disabled={!!busy} onclick={scuttle}>
-					{busy === 'scuttle' ? 'scuttling…' : '⚠ Scuttle ship'}
+					{busy === 'scuttle' ? 'scuttling…' : '⚠ Scuttle & Delete Ship'}
 				</button>
 			</article>
 		</div>
 
-		<!-- RIGHT - mods, backups, logs -->
+		<!-- RIGHT - mods, cargo hold, logs -->
 		<div class="col">
 			<Rigging {id} />
 
 			<article class="card">
 				<header class="card-head">
-					<h2 class="serif">cargo hold</h2>
-					<p>save tarballs in <code>{ship.path}/backups/</code>. hot-tarred (no stop required).</p>
+					<h2 class="serif">Cargo Hold (Backups)</h2>
+					<p>Hot save snapshots stored in <code>{ship.path}/backups/</code>.</p>
 				</header>
-				<div class="row gap">
-					<span class="mono ink-3">storage on disk: {fmt_size(ship.storage_bytes)}</span>
+				<div class="row gap cargo-top">
+					<span class="mono ink-3">Disk consumption: <strong class="ink-1">{fmt_size(ship.storage_bytes)}</strong></span>
 					<span class="grow"></span>
 					<button class="btn btn-primary" disabled={!!busy} onclick={() => act('backup')}>
-						{busy === 'backup' ? 'tarring…' : 'Backup now'}
+						{busy === 'backup' ? 'tarring…' : '📦 Snapshot Backup'}
 					</button>
 				</div>
 				{#if backups.length}
 					<ul class="bk-list mono">
 						{#each backups.slice(0, 8) as b}
 							<li>
-								<span class="bk-name">{b.name}</span>
+								<span class="bk-name" title={b.name}>{b.name}</span>
 								<span class="bk-size">{fmt_size(b.size)}</span>
 								<span class="bk-time">{fmt_date(b.mtime)}</span>
 							</li>
 						{/each}
 					</ul>
-					{#if backups.length > 8}<p class="ink-4 mono">+{backups.length - 8} older</p>{/if}
+					{#if backups.length > 8}<p class="ink-4 mono small">+{backups.length - 8} older archives stored</p>{/if}
 				{:else}
-					<p class="ink-4">no backups yet.</p>
+					<p class="ink-4 empty-note">No save snapshots recorded yet.</p>
 				{/if}
 			</article>
 
 			<article class="card">
-				<header class="card-head">
-					<h2 class="serif">log book</h2>
-					<p>last <input type="number" bind:value={logs_lines} min="50" max="2000" step="50" class="inline-num" /> lines from <code>docker logs {ship.container}</code></p>
+				<header class="card-head log-head">
+					<div>
+						<h2 class="serif">Ship's Log Book</h2>
+						<p>Real-time stdout/stderr from <code>docker logs {ship.container}</code></p>
+					</div>
+					<div class="log-controls mono">
+						<span>tail lines:</span>
+						<input type="number" bind:value={logs_lines} min="50" max="2000" step="50" class="inline-num" />
+					</div>
 				</header>
-				<pre class="logs mono">{logs || '(no output yet)'}</pre>
+				<pre class="logs mono">{logs || '(no logs captured yet — cast off vessel to start container)'}</pre>
 			</article>
 		</div>
 	</section>
@@ -313,70 +330,121 @@
 		align-items: flex-end;
 		gap: 24px;
 		flex-wrap: wrap;
-		margin-bottom: 24px;
+		margin-bottom: 28px;
 		padding-bottom: 24px;
 		border-bottom: 1px solid var(--color-border);
 	}
-	.bridge-head h1 { font-size: 40px; font-weight: 600; margin: 4px 0 8px; }
-	.bridge-head .sub { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: var(--color-ink-3); font-size: 12px; margin: 0; }
-	.bridge-head .sub .sep { opacity: 0.5; }
-	.bridge-head .actions { display: flex; gap: 8px; }
+	.bridge-info { max-width: 700px; }
+	.nav-breadcrumbs { margin-bottom: 8px; }
+	.back-link {
+		font-family: var(--font-mono);
+		font-size: 11.5px;
+		letter-spacing: 0.08em;
+		color: var(--color-accent);
+		text-transform: uppercase;
+	}
+	.back-link:hover { color: #ffffff; }
 
-	.grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 24px; }
-	@media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+	.bridge-head h1 {
+		font-size: 38px;
+		font-weight: 700;
+		margin: 2px 0 10px;
+		color: #ffffff;
+		letter-spacing: 0.03em;
+		text-shadow: 0 2px 14px rgba(0,0,0,0.8);
+	}
+	
+	.status-pills {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		flex-wrap: wrap;
+		font-size: 12px;
+		color: var(--color-ink-3);
+	}
+	.status-pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 3px 8px;
+		border-radius: 4px;
+		background: rgba(255,255,255,0.05);
+		border: 1px solid var(--color-border);
+		color: var(--color-ink-2);
+	}
+	.status-pill.on {
+		background: rgba(104, 186, 140, 0.15);
+		border-color: rgba(104, 186, 140, 0.4);
+		color: #ffffff;
+	}
+	.status-pills .sep { opacity: 0.3; }
+
+	.bridge-actions { display: flex; gap: 10px; align-items: center; }
+	.btn-cast { height: 38px; padding: 0 20px; }
+
+	.grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 24px; }
+	@media (max-width: 1024px) { .grid { grid-template-columns: 1fr; } }
 	.col { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
 
 	.card-head { padding-bottom: 14px; margin-bottom: 18px; border-bottom: 1px solid var(--color-border); }
-	.card-head h2 { font-size: 22px; font-weight: 500; margin: 0 0 4px; }
-	.card-head p { color: var(--color-ink-3); margin: 0; font-size: 13px; }
-	.card-head code { font-family: var(--font-mono); font-size: 11px; background: var(--color-surface-2); padding: 1px 5px; border-radius: 2px; color: var(--color-ink-2); }
+	.card-head h2 { font-size: 20px; font-weight: 600; margin: 0 0 4px; color: #ffffff; }
+	.card-head p { color: var(--color-ink-2); margin: 0; font-size: 13px; }
+	.card-head code { font-family: var(--font-mono); font-size: 11px; background: var(--color-surface-2); padding: 1px 5px; border-radius: 4px; color: var(--color-accent-bright); }
 
-	.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 18px; }
+	.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px 18px; }
+	.field-label span { font-size: 10.5px; font-weight: 600; color: var(--color-accent); letter-spacing: 0.14em; }
 
 	.form-foot { display: flex; justify-content: space-between; align-items: center; padding-top: 18px; margin-top: 18px; border-top: 1px solid var(--color-border); }
-	.hint { font-size: 11px; color: var(--color-ink-3); letter-spacing: 0.06em; }
+	.hint { font-size: 11.5px; color: var(--color-ink-3); letter-spacing: 0.04em; }
 
-	.card.danger { border-color: rgba(176, 77, 62, 0.3); }
+	.card.danger { border-color: rgba(194, 89, 83, 0.4); }
 	.card.danger .card-head h2 { color: var(--color-crimson); }
 
 	.row.gap { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 	.grow { flex: 1; }
+	.ink-1 { color: #ffffff; }
 	.ink-3 { color: var(--color-ink-3); }
 	.ink-4 { color: var(--color-ink-4); }
 
-	.bk-list { list-style: none; padding: 0; margin: 16px 0 0; display: flex; flex-direction: column; gap: 6px; font-size: 12px; }
-	.bk-list li { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; padding: 6px 0; border-bottom: 1px dashed var(--color-border); }
-	.bk-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-ink-2); }
-	.bk-size { color: var(--color-ink-3); }
-	.bk-time { color: var(--color-ink-4); font-size: 11px; }
+	.cargo-top { padding-bottom: 12px; border-bottom: 1px solid var(--color-border); }
+	.bk-list { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-direction: column; gap: 6px; font-size: 12px; }
+	.bk-list li { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; padding: 8px 10px; background: rgba(0,0,0,0.25); border-radius: 4px; border: 1px solid var(--color-border); }
+	.bk-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-accent-bright); }
+	.bk-size { color: var(--color-ink-2); }
+	.bk-time { color: var(--color-ink-3); font-size: 11px; }
 
-	.inline-num { display: inline-block; width: 80px; padding: 2px 6px; font-size: 12px; }
+	.log-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+	.log-controls { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--color-ink-3); }
+	.inline-num { display: inline-block; width: 72px; padding: 4px 8px; font-size: 12px; }
 
 	.logs {
-		background: var(--color-surface-2);
+		background: rgba(5, 7, 9, 0.85);
 		border: 1px solid var(--color-border);
-		padding: 12px 14px;
-		border-radius: 2px;
-		max-height: 360px;
+		padding: 14px 16px;
+		border-radius: 6px;
+		max-height: 420px;
 		overflow: auto;
 		font-size: 11.5px;
-		line-height: 1.5;
-		color: var(--color-ink-2);
+		line-height: 1.55;
+		color: #e2ded8;
 		white-space: pre-wrap;
 		word-break: break-word;
 		margin: 0;
 	}
 
 	.toast {
-		background: var(--color-accent-soft);
-		border: 1px solid var(--color-accent);
-		color: var(--color-accent-bright);
-		padding: 10px 14px;
-		border-radius: 2px;
-		font-size: 13px;
-		margin-bottom: 16px;
+		background: rgba(204, 185, 157, 0.15);
+		border: 1px solid var(--color-accent-bright);
+		color: #ffffff;
+		padding: 10px 16px;
+		border-radius: 6px;
+		font-size: 12.5px;
+		margin-bottom: 20px;
+		box-shadow: 0 4px 16px rgba(0,0,0,0.4);
 	}
 
-	.loading, .err { color: var(--color-ink-3); padding: 32px 0; }
-	.err { color: var(--color-crimson); }
+	.empty-note { font-size: 13px; margin-top: 14px; text-align: center; }
+	.loading-state, .err-card { text-align: center; padding: 56px 28px; max-width: 600px; margin: 40px auto; }
+	.loading { color: var(--color-accent-bright); }
+	.err { color: var(--color-crimson); margin-bottom: 14px; }
 </style>

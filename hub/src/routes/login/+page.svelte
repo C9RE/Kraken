@@ -176,42 +176,48 @@
 		align-items: center;
 		justify-content: center;
 		padding: 24px;
+		position: relative;
+		z-index: 1;
 	}
 	.card {
 		width: 100%;
 		max-width: 420px;
-		padding: 32px 28px;
+		padding: 36px 30px;
 		border: 1px solid var(--color-border);
-		background: var(--color-surface);
-		border-radius: 2px;
+		background: rgba(14, 18, 23, 0.85);
+		backdrop-filter: blur(14px);
+		-webkit-backdrop-filter: blur(14px);
+		border-radius: 8px;
+		box-shadow: 0 8px 32px rgba(0,0,0,0.6);
 	}
-	header { text-align: center; margin-bottom: 22px; }
-	.kicker { margin: 0; color: var(--color-ink-3); font-family: var(--font-display); font-style: italic; font-size: 13px; }
-	h1 { font-size: 38px; font-weight: 600; margin: 4px 0 0; letter-spacing: -0.02em; }
+	header { text-align: center; margin-bottom: 24px; }
+	.kicker { margin: 0; color: var(--color-accent); font-family: var(--font-display); font-style: italic; font-size: 13px; }
+	h1 { font-size: 34px; font-weight: 700; margin: 4px 0 0; color: #ffffff; letter-spacing: 0.02em; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
 
 	.boxes {
 		display: grid;
 		grid-template-columns: repeat(6, 1fr);
 		gap: 8px;
-		margin-bottom: 12px;
+		margin-bottom: 14px;
 	}
 	.boxes input {
 		text-align: center;
-		font: 600 28px/1 var(--font-mono);
-		padding: 14px 0;
+		font: 700 26px/1 var(--font-mono);
+		padding: 12px 0;
 		letter-spacing: 0;
-		color: var(--color-ink);
+		color: #ffffff;
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border-strong);
-		border-radius: 2px;
-		caret-color: var(--color-accent);
+		border-radius: 6px;
+		caret-color: var(--color-accent-bright);
+		transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 	}
-	.boxes input:focus { border-color: var(--color-accent); outline: none; background: var(--color-accent-soft); }
-	.boxes.locked input { opacity: 0.5; }
+	.boxes input:focus { border-color: var(--color-accent-bright); outline: none; background: var(--color-surface-3); box-shadow: 0 0 0 2px rgba(204, 185, 157, 0.25); }
+	.boxes.locked input { opacity: 0.4; cursor: not-allowed; }
 
-	.hint, .err, .lockout { text-align: center; margin: 0 0 16px; font-size: 12px; }
-	.hint { color: var(--color-ink-4); }
-	.err { color: var(--color-crimson); }
+	.hint, .err, .lockout { text-align: center; margin: 0 0 18px; font-size: 12.5px; }
+	.hint { color: var(--color-ink-3); }
+	.err { color: var(--color-crimson); font-weight: 600; }
 	.lockout { color: var(--color-rust); font-weight: 600; }
 
 	.keypad {
@@ -220,16 +226,17 @@
 		gap: 8px;
 	}
 	.key {
-		font: 500 22px/1 var(--font-display);
+		font: 600 22px/1 var(--font-display);
 		padding: 14px 0;
-		color: var(--color-ink);
-		background: var(--color-surface-2);
+		color: #ffffff;
+		background: rgba(255,255,255,0.03);
 		border: 1px solid var(--color-border-strong);
-		border-radius: 2px;
-		transition: all 0.1s;
+		border-radius: 6px;
+		cursor: pointer;
+		transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
 	}
-	.key:hover:not(:disabled) { background: var(--color-accent-soft); border-color: var(--color-accent); color: var(--color-accent-bright); }
-	.key:active:not(:disabled) { transform: scale(0.97); }
+	.key:hover:not(:disabled) { background: var(--color-accent-soft); border-color: var(--color-accent-bright); color: var(--color-accent-bright); transform: translateY(-1px); }
+	.key:active:not(:disabled) { transform: scale(0.96); }
 	.key:disabled { opacity: 0.4; cursor: not-allowed; }
-	.key-text { font: 600 11px/1 var(--font-body); text-transform: uppercase; letter-spacing: 0.16em; color: var(--color-ink-3); }
+	.key-text { font: 700 11px/1 var(--font-body); text-transform: uppercase; letter-spacing: 0.16em; color: var(--color-accent); }
 </style>

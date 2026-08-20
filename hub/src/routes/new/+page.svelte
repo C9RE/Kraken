@@ -53,88 +53,123 @@
 	}
 </script>
 
-<section class="hero">
-	<p class="kicker italic">commission a new vessel</p>
-	<h1 class="serif">drydock</h1>
+<section class="drydock-header">
+	<div class="nav-breadcrumbs">
+		<a href="/" class="back-link">← Harbor Fleet</a>
+	</div>
+	<p class="kicker italic">Commission a New Vessel</p>
+	<h1 class="serif">Drydock</h1>
 	<p class="hero-sub">
-		give the ship a name, pick a port, set the headcount. the hub will lay her keel -
-		writing a docker-compose stack you can edit later from her bridge.
+		Give your vessel a name, allocate UDP ports, and configure headcount capacity. The hub will automatically lay her keel by generating a Docker Compose stack ready for instant launch.
 	</p>
 </section>
 
 <form class="card form" onsubmit={submit}>
 	<div class="row">
 		<label>
-			<span>ship name</span>
-			<input value={form.name} oninput={on_name_input} placeholder="The Mariner" required />
+			<span>Vessel Name</span>
+			<input value={form.name} oninput={on_name_input} placeholder="The Sovereign" required />
 		</label>
 		<label>
-			<span>id <em>(slug)</em></span>
+			<span>Identifier Slug <em>(container id)</em></span>
 			<input value={form.id} oninput={(e) => { form.id = e.target.value; touched_id = true; }}
-				placeholder="mariner" pattern="[a-z][a-z0-9-]{1,30}" required />
+				placeholder="sovereign" pattern="[a-z][a-z0-9-]{1,30}" required />
 		</label>
 	</div>
 
 	<label>
-		<span>server note</span>
-		<input bind:value={form.server_note} placeholder="A friendly co-op server" />
+		<span>Server Note / MOTD</span>
+		<input bind:value={form.server_note} placeholder="Co-op sailing server · Mods enabled" />
 	</label>
 
-	<div class="row">
+	<div class="row row-3">
 		<label>
-			<span>max players</span>
+			<span>Max Players</span>
 			<input type="number" min="1" max="16" bind:value={form.max_players} />
 		</label>
 		<label>
-			<span>game port (UDP)</span>
+			<span>Game Port (UDP)</span>
 			<input type="number" bind:value={form.port} />
 		</label>
 		<label>
-			<span>query port (UDP)</span>
+			<span>Query Port (UDP)</span>
 			<input type="number" bind:value={form.queryport} />
 		</label>
 	</div>
 
 	<div class="row">
 		<label>
-			<span>invite code <em>(blank = auto)</em></span>
-			<input bind:value={form.invite_code} placeholder="leave empty to keep existing" />
+			<span>Invite Code <em>(blank = auto-generate)</em></span>
+			<input bind:value={form.invite_code} placeholder="auto-generated on boot if empty" />
 		</label>
 		<label>
-			<span>server password <em>(optional)</em></span>
-			<input bind:value={form.server_password} placeholder="public if blank" />
+			<span>Server Password <em>(optional)</em></span>
+			<input bind:value={form.server_password} placeholder="leave blank for public access" />
 		</label>
 	</div>
 
 	<div class="row">
 		<label>
-			<span>image tag</span>
+			<span>Docker Image Tag</span>
 			<input bind:value={form.image_tag} />
 		</label>
 		<label>
-			<span>hostname <em>(keep "localhost" for ICE)</em></span>
+			<span>Hostname <em>(default: localhost)</em></span>
 			<input bind:value={form.hostname} />
 		</label>
 	</div>
 
-	{#if error}<p class="err">{error}</p>{/if}
+	{#if error}<p class="err mono">{error}</p>{/if}
 
 	<div class="actions">
-		<a href="/" class="btn btn-ghost">Back to fleet</a>
-		<button type="submit" class="btn btn-primary" disabled={saving || !form.id || !form.name}>
-			{saving ? 'laying keel…' : 'Lay keel'}
+		<a href="/" class="btn btn-ghost">Cancel</a>
+		<button type="submit" class="btn btn-primary btn-lay" disabled={saving || !form.id || !form.name}>
+			{saving ? 'laying keel…' : '⚓ Lay Keel & Commission'}
 		</button>
 	</div>
 </form>
 
 <style>
-	.hero { margin-bottom: 32px; max-width: 720px; }
-	.hero h1 { font-size: 44px; font-weight: 600; margin: 4px 0 12px; }
-	.hero-sub { font-size: 15px; color: var(--color-ink-2); line-height: 1.6; }
+	.drydock-header {
+		margin-bottom: 28px;
+		max-width: 740px;
+		padding-bottom: 20px;
+		border-bottom: 1px solid var(--color-border);
+	}
+	.nav-breadcrumbs { margin-bottom: 8px; }
+	.back-link {
+		font-family: var(--font-mono);
+		font-size: 11.5px;
+		letter-spacing: 0.08em;
+		color: var(--color-accent);
+		text-transform: uppercase;
+	}
+	.back-link:hover { color: #ffffff; }
 
-	.form { display: flex; flex-direction: column; gap: 20px; max-width: 760px; }
-	.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
-	label em { font-style: italic; color: var(--color-ink-4); font-weight: 400; text-transform: none; letter-spacing: 0; }
-	.actions { display: flex; gap: 12px; justify-content: flex-end; padding-top: 8px; border-top: 1px solid var(--color-border); }
+	.drydock-header h1 {
+		font-size: 38px;
+		font-weight: 700;
+		margin: 4px 0 10px;
+		color: #ffffff;
+		letter-spacing: 0.03em;
+		text-shadow: 0 2px 14px rgba(0,0,0,0.8);
+	}
+	.hero-sub { font-size: 14.5px; color: var(--color-ink-2); line-height: 1.6; margin: 0; }
+
+	.form {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+		max-width: 780px;
+	}
+	.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+	.row-3 { grid-template-columns: repeat(3, 1fr); }
+	@media (max-width: 640px) { .row-3 { grid-template-columns: 1fr; } }
+
+	label span { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent); }
+	label em { font-style: italic; color: var(--color-ink-3); font-weight: 400; text-transform: none; letter-spacing: 0; }
+
+	.actions { display: flex; gap: 12px; justify-content: flex-end; align-items: center; padding-top: 14px; border-top: 1px solid var(--color-border); }
+	.btn-lay { height: 38px; padding: 0 22px; }
 	.err { color: var(--color-crimson); margin: 0; font-size: 13px; }
 </style>

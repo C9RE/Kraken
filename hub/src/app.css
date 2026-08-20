@@ -47,10 +47,7 @@
 
 html { background: var(--color-bg); color-scheme: dark; }
 body {
-	background:
-		radial-gradient(ellipse 90% 60% at 50% 0%, rgba(35, 52, 60, 0.4), transparent 70%),
-		radial-gradient(ellipse 60% 40% at 50% 100%, rgba(20, 30, 36, 0.5), transparent 70%),
-		var(--color-bg);
+	background-color: var(--color-bg);
 	color: var(--color-ink);
 	font-family: var(--font-body);
 	font-size: 14px;
@@ -59,6 +56,24 @@ body {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 	margin: 0;
+	overflow-x: hidden;
+}
+
+/* Fixed Non-Moving Atmospheric Windrose Backdrop */
+.fixed-backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 0;
+	background-color: #07090c;
+	background-image: 
+		radial-gradient(ellipse 110% 80% at 50% 25%, rgba(7, 9, 12, 0.32) 0%, rgba(7, 9, 12, 0.62) 55%, rgba(7, 9, 12, 0.92) 100%),
+		linear-gradient(180deg, rgba(7, 9, 12, 0.2) 0%, rgba(7, 9, 12, 0.38) 45%, rgba(7, 9, 12, 0.88) 88%, #07090c 100%),
+		url('/assets/windrose-bg.webp');
+	background-position: center 20%;
+	background-repeat: no-repeat;
+	background-size: cover;
+	pointer-events: none;
+	filter: saturate(1.12) contrast(1.06);
 }
 
 .serif { font-family: var(--font-display); letter-spacing: 0.02em; }
@@ -77,7 +92,7 @@ body {
 	font-family: 'Fraunces', Georgia, serif;
 	font-style: italic;
 	font-size: 14px;
-	color: var(--color-accent);
+	color: var(--color-accent-bright);
 	margin: 0;
 }
 
@@ -93,11 +108,12 @@ input, select, textarea {
 	border-radius: 6px;
 	padding: 8px 12px;
 	outline: none;
-	transition: border-color 0.15s, box-shadow 0.15s;
+	transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
 input:focus, select:focus, textarea:focus {
 	border-color: var(--color-border-focus);
-	box-shadow: 0 0 0 2px rgba(204, 185, 157, 0.15);
+	box-shadow: 0 0 0 2px rgba(204, 185, 157, 0.2);
+	background: var(--color-surface-3);
 }
 label { display: flex; flex-direction: column; gap: 5px; }
 label span { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-ink-3); }
@@ -107,36 +123,71 @@ label span { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
 	align-items: center;
 	justify-content: center;
 	gap: 6px;
-	padding: 8px 16px;
+	min-height: 36px;
+	padding: 0 16px;
 	font-family: var(--font-body);
 	font-weight: 700;
 	font-size: 11px;
 	letter-spacing: 0.16em;
 	text-transform: uppercase;
 	color: var(--color-accent-bright);
-	background: transparent;
+	background: var(--color-accent-soft);
 	border: 1px solid var(--color-accent);
 	border-radius: 6px;
-	transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.12s, box-shadow 0.15s;
+	cursor: pointer;
+	transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s, box-shadow 0.15s;
 }
 .btn:hover:not(:disabled) {
-	background: var(--color-accent-soft);
-	color: #ffffff;
+	background: var(--color-accent);
+	color: #080a0d;
 	border-color: var(--color-accent-bright);
 	transform: translateY(-1px);
+	box-shadow: 0 4px 14px rgba(204, 185, 157, 0.2);
 }
-.btn:active:not(:disabled) { transform: scale(0.96); }
+.btn:active:not(:disabled) { transform: scale(0.96); box-shadow: none; }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.btn-primary { background: var(--color-accent); color: #080a0d; font-weight: 700; border-color: var(--color-accent-bright); }
-.btn-primary:hover:not(:disabled) { background: var(--color-accent-bright); color: #080a0d; box-shadow: 0 4px 14px rgba(204, 185, 157, 0.25); }
-.btn-danger { color: var(--color-crimson); border-color: var(--color-crimson); }
-.btn-danger:hover:not(:disabled) { background: rgba(194, 89, 83, 0.15); color: #ffffff; }
-.btn-ghost { border-color: var(--color-border-strong); color: var(--color-ink-2); }
+.btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--color-border-focus); }
+
+.btn-primary {
+	background: var(--color-accent);
+	color: #080a0d;
+	font-weight: 700;
+	border-color: var(--color-accent-bright);
+}
+.btn-primary:hover:not(:disabled) {
+	background: var(--color-accent-bright);
+	color: #080a0d;
+	border-color: #ffffff;
+	box-shadow: 0 4px 16px rgba(204, 185, 157, 0.35);
+}
+
+.btn-danger {
+	color: #ffffff;
+	background: rgba(194, 89, 83, 0.15);
+	border-color: var(--color-crimson);
+}
+.btn-danger:hover:not(:disabled) {
+	background: var(--color-crimson);
+	border-color: #ffffff;
+	color: #ffffff;
+	box-shadow: 0 4px 14px rgba(194, 89, 83, 0.3);
+}
+
+.btn-ghost {
+	background: transparent;
+	border-color: var(--color-border-strong);
+	color: var(--color-ink-2);
+}
+.btn-ghost:hover:not(:disabled) {
+	background: var(--color-surface-2);
+	border-color: var(--color-accent-bright);
+	color: #ffffff;
+}
 
 .card {
 	background: var(--color-surface);
-	backdrop-filter: blur(12px);
-	-webkit-backdrop-filter: blur(12px);
+	backdrop-filter: blur(14px);
+	-webkit-backdrop-filter: blur(14px);
 	border: 1px solid var(--color-border);
 	border-radius: 8px;
 	padding: 24px 26px;
@@ -149,6 +200,7 @@ label span { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
 	width: 8px; height: 8px;
 	border-radius: 50%;
 	background: var(--color-ink-4);
+	flex-shrink: 0;
 }
 .dot.on { background: var(--color-sage); box-shadow: 0 0 8px var(--color-sage); }
 .dot.warn { background: var(--color-rust); box-shadow: 0 0 6px var(--color-rust); }
