@@ -153,9 +153,9 @@
 							onclick={() => apply_preset_local(p)}>
 							<span class="p-name serif">{p.toLowerCase()}</span>
 							<span class="p-desc">
-								{p === 'Easy'   ? 'forgiving - strong ship, weak mobs' :
-								 p === 'Medium' ? 'baseline - every multiplier 1.0×'   :
-								                  'hostile - buffed mobs, fragile ship'}
+								{p === 'Easy'   ? 'Forgiving: 0.7× mob/ship HP, 0.6× damage, 0.7× boarding' :
+								 p === 'Medium' ? 'Vanilla Baseline: 1.0× damage, 1.0× health, Normal combat'   :
+								                  'Hostile: 1.5× mob/ship HP, 1.25× damage, Hard combat'}
 							</span>
 						</button>
 					{/each}
@@ -164,7 +164,10 @@
 
 			<!-- Combat preset -->
 			<section class="block">
-				<header class="block-head"><h4>combat difficulty</h4></header>
+				<header class="block-head">
+					<h4>combat difficulty</h4>
+					<p>Controls boss aggression, attack patterns, and combat difficulty scaling.</p>
+				</header>
 				<div class="combat-row">
 					{#each ['Easy', 'Normal', 'Hard'] as c}
 						<button class="combat"
@@ -180,7 +183,7 @@
 			<section class="block">
 				<header class="block-head">
 					<h4>multipliers</h4>
-					<p>1.00× is vanilla. drag any slider and the preset flips to <em>custom</em>.</p>
+					<p>1.00× is vanilla. Dragging any slider automatically switches the world to <em>Custom</em>.</p>
 				</header>
 				<div class="sliders">
 					{#each state.float_knobs as k}
@@ -189,6 +192,7 @@
 								<span>{k.label}</span>
 								<span class="mono s-val">{fmt_float(world.floats[k.tag])}×</span>
 							</span>
+							{#if k.desc}<span class="s-desc mono">{k.desc}</span>{/if}
 							<input type="range" min={k.min} max={k.max} step={k.step}
 								bind:value={world.floats[k.tag]}
 								onchange={() => world.preset = 'Custom'} />
@@ -206,8 +210,10 @@
 						<label class="bool">
 							<input type="checkbox" bind:checked={world.bools[k.tag]}
 								onchange={() => world.preset = 'Custom'} />
-							<span>{k.label}</span>
-							<span class="muted mono">{k.tag.split('.').pop()}</span>
+							<div class="bool-text">
+								<span>{k.label}</span>
+								{#if k.desc}<span class="muted bool-desc">{k.desc}</span>{/if}
+							</div>
 						</label>
 					{/each}
 				</div>
@@ -332,14 +338,16 @@
 	.s-label { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: var(--color-ink-2); }
 	.s-label > span:first-child { letter-spacing: 0.04em; }
 	.s-val { color: var(--color-accent-bright); font-weight: 600; }
+	.s-desc { font-size: 10px; color: var(--color-ink-3); margin-top: -2px; }
 	.s-range { font-size: 10px; color: var(--color-ink-4); }
 	.slider input[type="range"] { width: 100%; padding: 0; background: transparent; border: 0; height: 18px; accent-color: var(--color-accent); cursor: pointer; }
 
-	.bools { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 18px; }
-	.bool { display: flex; flex-direction: row; align-items: center; gap: 10px; cursor: pointer; }
-	.bool input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--color-accent); cursor: pointer; }
-	.bool > span:nth-child(2) { color: var(--color-ink); font-size: 13px; }
-	.bool > span:nth-child(3) { font-size: 10px; }
+	.bools { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px 20px; }
+	.bool { display: flex; flex-direction: row; align-items: flex-start; gap: 10px; cursor: pointer; }
+	.bool input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--color-accent); cursor: pointer; margin-top: 2px; }
+	.bool-text { display: flex; flex-direction: column; gap: 2px; }
+	.bool-text > span:first-child { color: var(--color-ink); font-size: 13px; font-weight: 500; }
+	.bool-desc { font-size: 11px; color: var(--color-ink-3); }
 
 	.form-foot { display: flex; justify-content: space-between; align-items: center; padding-top: 18px; margin-top: 22px; border-top: 1px solid var(--color-border); }
 	.hint { font-size: 11.5px; color: var(--color-ink-3); letter-spacing: 0.04em; }

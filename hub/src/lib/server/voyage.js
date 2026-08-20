@@ -42,37 +42,37 @@ const ROCKSDB_DIRS = ['RocksDB_v2', 'RocksDB'];
 // Public knob keys we surface in the UI. The actual JSON keys are the
 // quoted-JSON form of these tag names.
 export const FLOAT_KNOBS = /** @type {const} */ ([
-	{ tag: 'WDS.Parameter.MobHealthMultiplier',              label: 'enemy hp',            min: 0.2, max: 5.0, step: 0.05 },
-	{ tag: 'WDS.Parameter.MobDamageMultiplier',              label: 'enemy damage',        min: 0.2, max: 5.0, step: 0.05 },
-	{ tag: 'WDS.Parameter.ShipsHealthMultiplier',            label: 'ship hp',             min: 0.4, max: 5.0, step: 0.05 },
-	{ tag: 'WDS.Parameter.ShipsDamageMultiplier',            label: 'ship damage',         min: 0.2, max: 2.5, step: 0.05 },
-	{ tag: 'WDS.Parameter.BoardingDifficultyMultiplier',     label: 'boarding difficulty', min: 0.2, max: 5.0, step: 0.05 },
-	{ tag: 'WDS.Parameter.Coop.StatsCorrectionModifier',     label: 'coop enemy scaling',  min: 0.0, max: 2.0, step: 0.05 },
-	{ tag: 'WDS.Parameter.Coop.ShipStatsCorrectionModifier', label: 'coop ship scaling',   min: 0.0, max: 2.0, step: 0.05 },
+	{ tag: 'WDS.Parameter.MobHealthMultiplier',              label: 'Mob Health Multiplier',            min: 0.2, max: 5.0, step: 0.05, desc: 'Enemy Health [0.2 - 5.0]' },
+	{ tag: 'WDS.Parameter.MobDamageMultiplier',              label: 'Mob Damage Multiplier',            min: 0.2, max: 5.0, step: 0.05, desc: 'Enemy Attack Power [0.2 - 5.0]' },
+	{ tag: 'WDS.Parameter.ShipsHealthMultiplier',            label: 'Ship Health Multiplier',           min: 0.4, max: 5.0, step: 0.05, desc: 'Enemy Vessel Durability [0.4 - 5.0]' },
+	{ tag: 'WDS.Parameter.ShipsDamageMultiplier',            label: 'Ship Damage Multiplier',           min: 0.2, max: 2.5, step: 0.05, desc: 'Enemy Vessel Damage [0.2 - 2.5]' },
+	{ tag: 'WDS.Parameter.BoardingDifficultyMultiplier',     label: 'Boarding Difficulty Multiplier',   min: 0.2, max: 5.0, step: 0.05, desc: 'Enemy Crew Size to Defeat [0.2 - 5.0]' },
+	{ tag: 'WDS.Parameter.Coop.StatsCorrectionModifier',     label: 'Co-op Enemy Scaling',              min: 0.0, max: 2.0, step: 0.05, desc: 'Enemy HP & Posture per Player [0.0 - 2.0]' },
+	{ tag: 'WDS.Parameter.Coop.ShipStatsCorrectionModifier', label: 'Co-op Ship Scaling',               min: 0.0, max: 2.0, step: 0.05, desc: 'Enemy Ship HP per Player [0.0 - 2.0]' },
 ]);
 
 export const BOOL_KNOBS = /** @type {const} */ ([
-	{ tag: 'WDS.Parameter.Coop.SharedQuests', label: 'shared quests' },
-	{ tag: 'WDS.Parameter.EasyExplore',       label: 'easy explore'  },
+	{ tag: 'WDS.Parameter.Coop.SharedQuests', label: 'Co-op Shared Quests', desc: 'Auto-completes active co-op quests for all players on the server' },
+	{ tag: 'WDS.Parameter.EasyExplore',       label: 'Immersive Exploration (Hide POI Markers)', desc: 'Disables map markers for points of interest, making exploration harder'  },
 ]);
 
-// Built-in difficulty presets - values lifted from Windrose's own preset table
-// so "Medium" puts every multiplier back to 1.0.
+// Built-in difficulty presets - verified against official Windrose Dedicated Server Guide:
+// https://playwindrose.com/dedicated-server-guide/
 export const PRESETS = {
 	Easy: {
 		combat: 'Easy',
 		floats: {
 			'WDS.Parameter.MobHealthMultiplier':              0.7,
-			'WDS.Parameter.MobDamageMultiplier':              0.7,
-			'WDS.Parameter.ShipsHealthMultiplier':            1.5,
-			'WDS.Parameter.ShipsDamageMultiplier':            1.3,
-			'WDS.Parameter.BoardingDifficultyMultiplier':     0.5,
-			'WDS.Parameter.Coop.StatsCorrectionModifier':     0.0,
+			'WDS.Parameter.MobDamageMultiplier':              0.6,
+			'WDS.Parameter.ShipsHealthMultiplier':            0.7,
+			'WDS.Parameter.ShipsDamageMultiplier':            0.6,
+			'WDS.Parameter.BoardingDifficultyMultiplier':     0.7,
+			'WDS.Parameter.Coop.StatsCorrectionModifier':     1.0,
 			'WDS.Parameter.Coop.ShipStatsCorrectionModifier': 0.0,
 		},
 		bools: {
 			'WDS.Parameter.Coop.SharedQuests': true,
-			'WDS.Parameter.EasyExplore':       true,
+			'WDS.Parameter.EasyExplore':       false,
 		},
 	},
 	Medium: {
@@ -84,7 +84,7 @@ export const PRESETS = {
 			'WDS.Parameter.ShipsDamageMultiplier':            1.0,
 			'WDS.Parameter.BoardingDifficultyMultiplier':     1.0,
 			'WDS.Parameter.Coop.StatsCorrectionModifier':     1.0,
-			'WDS.Parameter.Coop.ShipStatsCorrectionModifier': 1.0,
+			'WDS.Parameter.Coop.ShipStatsCorrectionModifier': 0.0,
 		},
 		bools: {
 			'WDS.Parameter.Coop.SharedQuests': true,
@@ -95,15 +95,15 @@ export const PRESETS = {
 		combat: 'Hard',
 		floats: {
 			'WDS.Parameter.MobHealthMultiplier':              1.5,
-			'WDS.Parameter.MobDamageMultiplier':              1.5,
-			'WDS.Parameter.ShipsHealthMultiplier':            0.7,
-			'WDS.Parameter.ShipsDamageMultiplier':            0.8,
+			'WDS.Parameter.MobDamageMultiplier':              1.25,
+			'WDS.Parameter.ShipsHealthMultiplier':            1.5,
+			'WDS.Parameter.ShipsDamageMultiplier':            1.25,
 			'WDS.Parameter.BoardingDifficultyMultiplier':     1.5,
-			'WDS.Parameter.Coop.StatsCorrectionModifier':     1.5,
-			'WDS.Parameter.Coop.ShipStatsCorrectionModifier': 1.5,
+			'WDS.Parameter.Coop.StatsCorrectionModifier':     1.0,
+			'WDS.Parameter.Coop.ShipStatsCorrectionModifier': 0.0,
 		},
 		bools: {
-			'WDS.Parameter.Coop.SharedQuests': false,
+			'WDS.Parameter.Coop.SharedQuests': true,
 			'WDS.Parameter.EasyExplore':       false,
 		},
 	},
