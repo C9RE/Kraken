@@ -1,7 +1,8 @@
-# 🐙 Kraken Hub
+# ⚓ Kraken Hub
 
-> Fleet manager for [Windrose](https://store.steampowered.com/app/3041230/Windrose/) dedicated servers.
-> One dashboard. Many ships. Click to start, stop, restart, refit, backup.
+> **Fleet manager for [Windrose](https://store.steampowered.com/app/3041230/Windrose/) dedicated servers.**  
+> One dashboard. Many ships. Click to start, stop, restart, refit, backup.  
+> Live at [**thekraken.cloud**](https://thekraken.cloud/) · AppID **`4129620`**
 
 The hub builds on the [Kraken docker image](../README.md) (a fork of [UberDudePL/windrose-dedicated-server-docker](https://github.com/UberDudePL/windrose-dedicated-server-docker)) - every ship you commission is a self-contained `docker-compose` stack on disk, generated from the template at the root of this repo.
 
@@ -10,11 +11,13 @@ The hub builds on the [Kraken docker image](../README.md) (a fork of [UberDudePL
 ## Features
 
 - **Drydock**: spin up new dedicated server instances with one form. No CLI required.
-- **Bridge**: edit `.env` settings (server name, invite code, max players, ports, password, image tag, notification webhooks…) per ship.
-- **Rigging**: drag-and-drop mod installer - accepts `.zip` (UE4SS layout), `.lua`, or `.dll`. Toggles enabled state in `mods.txt`. Removes mods cleanly.
+- **Bridge & Manifest**: edit `.env` settings (server name, invite code, max players, ports, password, image tag, notification webhooks…) per ship.
+- **Rigging**: drag-and-drop mod installer - accepts `.zip` (UE4SS layout), `.lua`, `.dll`, or `.pak`/`.ucas`/`.utoc`. Toggles enabled state across `mods.json` and `mods.txt`. Removes mods cleanly.
+- **Voyage**: visual difficulty multiplier tuning directly on `WorldDescription.json` with safety guards.
 - **Lifecycle**: start, stop, restart, refit (pull + restart), scuttle.
 - **Backups**: hot-tar saves into the ship's own `backups/` directory.
 - **Logs**: tail container logs straight from the dashboard.
+- **Security**: built-in scrypt PIN authentication gate with per-IP rate limiting.
 - **Multi-instance**: run several worlds side-by-side; each ship is isolated under its own directory.
 
 ---
@@ -147,11 +150,10 @@ UE4SS only reads `mods.json` / `mods.txt` at process start. The Rigging panel sh
 
 ## Roadmap
 
-- Scheduled backups + retention policy per ship.
-- Browse + restore from the backup tarball list (currently view-only).
+- Scheduled backups + retention policy automation per ship.
+- Browse + restore from the backup tarball list.
 - One-click image-channel switch (`stable` / `dev`).
-- Multi-host Docker - point the hub at a remote `DOCKER_HOST=tcp://…` instead of the local socket.
-- Optional auth (token / basic) - currently the hub is unauthenticated; expose it on a private network or front it with Caddy/nginx auth.
+- Multi-host Docker — point the hub at a remote `DOCKER_HOST=tcp://…` instead of the local socket.
 
 ---
 
