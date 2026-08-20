@@ -382,9 +382,9 @@
 	.bridge-actions { display: flex; gap: 10px; align-items: center; }
 	.btn-cast { height: 38px; padding: 0 20px; }
 
-	.grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 24px; }
-	@media (max-width: 1024px) { .grid { grid-template-columns: 1fr; } }
-	.col { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+	.grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+	@media (max-width: 1100px) { .grid { grid-template-columns: 1fr; gap: 24px; } }
+	.col { display: flex; flex-direction: column; gap: 28px; min-width: 0; }
 
 	.card-head { padding-bottom: 14px; margin-bottom: 18px; border-bottom: 1px solid var(--color-border); }
 	.card-head h2 { font-size: 20px; font-weight: 600; margin: 0 0 4px; color: #ffffff; }

@@ -132,7 +132,7 @@
 <style>
 	.drydock-header {
 		margin-bottom: 28px;
-		max-width: 740px;
+		max-width: 1000px;
 		padding-bottom: 20px;
 		border-bottom: 1px solid var(--color-border);
 	}
@@ -160,7 +160,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 20px;
-		max-width: 780px;
+		max-width: 1000px;
 	}
 	.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
 	.row-3 { grid-template-columns: repeat(3, 1fr); }

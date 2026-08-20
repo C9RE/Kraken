@@ -192,185 +192,208 @@
 		<p class="err mono">System error: {error}</p>
 	</div>
 {:else if s}
+	<div class="settings-grid">
+		<!-- Left column -->
+		<div class="settings-col">
+			<!-- Updates panel -->
+			<article class="card">
+				<header class="card-head">
+					<h2 class="serif">Software Stream</h2>
+					<p>Upstream repository: <code>{s.remote_url || 'origin'}</code> on branch <code>{s.branch}</code>.</p>
+				</header>
 
-	<!-- Updates panel -->
-	<article class="card">
-		<header class="card-head">
-			<h2 class="serif">Software Stream</h2>
-			<p>Upstream repository: <code>{s.remote_url || 'origin'}</code> on branch <code>{s.branch}</code>.</p>
-		</header>
+				{#if s.error}
+					<p class="err">{s.error}</p>
+				{:else}
+					<div class="version-summary">
+						<span class="version-chip mono" class:behind={s.update_available}>{display_version}</span>
+						<span class="status-line" class:warn-text={s.update_available}>{update_status}</span>
+					</div>
 
-		{#if s.error}
-			<p class="err">{s.error}</p>
-		{:else}
-			<div class="version-summary">
-				<span class="version-chip mono" class:behind={s.update_available}>{display_version}</span>
-				<span class="status-line" class:warn-text={s.update_available}>{update_status}</span>
-			</div>
+					{#if toast}<div class="toast mono">{toast}</div>{/if}
 
-			{#if toast}<div class="toast mono">{toast}</div>{/if}
+					<div class="action-row">
+						<button class="btn btn-ghost" onclick={check_now} disabled={updating}>Check for updates</button>
+						<button class="btn btn-primary"
+							onclick={apply_update}
+							disabled={updating || !s.update_available}>
+							{updating ? 'updating...' : (s.update_available ? 'Apply update' : 'Up to date')}
+						</button>
+					</div>
 
-			<div class="action-row">
-				<button class="btn btn-ghost" onclick={check_now} disabled={updating}>Check for updates</button>
-				<button class="btn btn-primary"
-					onclick={apply_update}
-					disabled={updating || !s.update_available}>
-					{updating ? 'updating...' : (s.update_available ? 'Apply update' : 'Up to date')}
-				</button>
-			</div>
-
-			{#if last_log.length}
-				<details class="log-block" open>
-					<summary>last update log</summary>
-					{#each last_log as step, i (i)}
-						<div class="log-step" class:fail={!step.ok}>
-							<span class="log-name mono">{step.ok ? '+' : 'x'} {step.step}</span>
-							<pre class="log-out mono">{step.output || '(no output)'}</pre>
-						</div>
-					{/each}
-				</details>
-			{/if}
-		{/if}
-	</article>
-
-	<!-- PIN auth -->
-	<article class="card">
-		<header class="card-head">
-			<h2 class="serif">Security PIN Access</h2>
-			<p>
-				Lock the hub dashboard behind a 4 to 12 digit PIN. Off by default.
-				Stored hashed (scrypt) with brute-force rate limiting (5 failed attempts locks for 15 minutes).
-			</p>
-		</header>
-
-		<div class="auth-state">
-			<div class="auth-state-badges">
-				<span class="state-chip" class:on={auth?.enabled}>
-					{auth?.enabled ? 'enabled' : 'disabled'}
-				</span>
-				{#if auth?.enabled && auth?.authed}
-					<span class="state-chip on">signed in</span>
+					{#if last_log.length}
+						<details class="log-block" open>
+							<summary>last update log</summary>
+							{#each last_log as step, i (i)}
+								<div class="log-step" class:fail={!step.ok}>
+									<span class="log-name mono">{step.ok ? '+' : 'x'} {step.step}</span>
+									<pre class="log-out mono">{step.output || '(no output)'}</pre>
+								</div>
+							{/each}
+						</details>
+					{/if}
 				{/if}
-			</div>
-			{#if auth?.enabled && auth?.authed}
-				<button class="btn btn-ghost btn-sm" onclick={logout}>Sign out</button>
-			{/if}
+			</article>
+
+			<!-- System info -->
+			<article class="card">
+				<header class="card-head">
+					<h2 class="serif">Environment &amp; Runtime</h2>
+					<p>Host server runtime configuration and active storage filesystem.</p>
+				</header>
+				<dl class="kv">
+					<div><dt>version</dt><dd class="mono">{s.version || '0.0.0'}</dd></div>
+					<div><dt>pid</dt><dd class="mono">{s.pid}</dd></div>
+					<div><dt>node / bun</dt><dd class="mono">{s.node_version}</dd></div>
+					<div><dt>uptime</dt><dd class="mono">{fmt_uptime(s.uptime_seconds)}</dd></div>
+					<div><dt>repo</dt><dd class="mono path">{s.repo_dir}</dd></div>
+					<div><dt>hub</dt><dd class="mono path">{s.hub_dir}</dd></div>
+					<div><dt>branch</dt><dd class="mono">{s.branch}</dd></div>
+					<div><dt>systemd unit</dt><dd class="mono">{s.systemd_unit || '(none)'}</dd></div>
+				</dl>
+			</article>
 		</div>
 
-		{#if pin_msg}<div class="toast mono">{pin_msg}</div>{/if}
+		<!-- Right column -->
+		<div class="settings-col">
+			<!-- PIN auth -->
+			<article class="card">
+				<header class="card-head">
+					<h2 class="serif">Security PIN Access</h2>
+					<p>
+						Lock the hub dashboard behind a 4 to 12 digit PIN. Off by default.
+						Stored hashed (scrypt) with brute-force rate limiting (5 failed attempts locks for 15 minutes).
+					</p>
+				</header>
 
-		{#if auth?.has_pin}
-			<div class="pin-row pin-row-current">
-				<label class="pin-field">
-					<span class="pin-label">current PIN</span>
-					<input
-						class="pin-input mono"
-						type="password"
-						inputmode="numeric"
-						pattern="[0-9]*"
-						maxlength="12"
-						autocomplete="current-password"
-						bind:value={pin_current}
-						placeholder="required to change/disable"
-						disabled={pin_busy} />
-				</label>
-			</div>
-			<div class="hairline"></div>
-		{/if}
+				<div class="auth-state">
+					<div class="auth-state-badges">
+						<span class="state-chip" class:on={auth?.enabled}>
+							{auth?.enabled ? 'enabled' : 'disabled'}
+						</span>
+						{#if auth?.enabled && auth?.authed}
+							<span class="state-chip on">signed in</span>
+						{/if}
+					</div>
+					{#if auth?.enabled && auth?.authed}
+						<button class="btn btn-ghost btn-sm" onclick={logout}>Sign out</button>
+					{/if}
+				</div>
 
-		<div class="pin-grid">
-			<label class="pin-field">
-				<span class="pin-label">{auth?.has_pin ? 'new PIN' : 'PIN'}</span>
-				<input
-					class="pin-input mono"
-					class:valid={pin_new_valid}
-					class:invalid={pin_new.length > 0 && !pin_new_valid}
-					type="password"
-					inputmode="numeric"
-					pattern="[0-9]*"
-					maxlength="12"
-					autocomplete="new-password"
-					bind:value={pin_new}
-					placeholder="4 to 12 digits"
-					disabled={pin_busy} />
-			</label>
-			<label class="pin-field">
-				<span class="pin-label">confirm</span>
-				<input
-					class="pin-input mono"
-					class:valid={pin_confirm_valid && pin_new === pin_confirm}
-					class:invalid={pin_confirm.length > 0 && (!pin_confirm_valid || pin_new !== pin_confirm)}
-					type="password"
-					inputmode="numeric"
-					pattern="[0-9]*"
-					maxlength="12"
-					autocomplete="new-password"
-					bind:value={pin_confirm}
-					placeholder="repeat the PIN"
-					disabled={pin_busy} />
-			</label>
+				{#if pin_msg}<div class="toast mono">{pin_msg}</div>{/if}
+
+				{#if auth?.has_pin}
+					<div class="pin-row pin-row-current">
+						<label class="pin-field">
+							<span class="pin-label">current PIN</span>
+							<input
+								class="pin-input mono"
+								type="password"
+								inputmode="numeric"
+								pattern="[0-9]*"
+								maxlength="12"
+								autocomplete="current-password"
+								bind:value={pin_current}
+								placeholder="required to change/disable"
+								disabled={pin_busy} />
+						</label>
+					</div>
+					<div class="hairline"></div>
+				{/if}
+
+				<div class="pin-grid">
+					<label class="pin-field">
+						<span class="pin-label">{auth?.has_pin ? 'new PIN' : 'choose a PIN'}</span>
+						<input
+							class="pin-input mono"
+							class:valid={pin_new_valid}
+							class:invalid={pin_new.length > 0 && !pin_new_valid}
+							type="password"
+							inputmode="numeric"
+							pattern="[0-9]*"
+							maxlength="12"
+							autocomplete="new-password"
+							bind:value={pin_new}
+							placeholder="4-12 digits"
+							disabled={pin_busy} />
+					</label>
+					<label class="pin-field">
+						<span class="pin-label">confirm PIN</span>
+						<input
+							class="pin-input mono"
+							class:valid={pins_match_and_valid}
+							class:invalid={pin_mismatch_hint}
+							type="password"
+							inputmode="numeric"
+							pattern="[0-9]*"
+							maxlength="12"
+							autocomplete="new-password"
+							bind:value={pin_confirm}
+							placeholder="re-enter PIN"
+							disabled={pin_busy || !pin_new} />
+					</label>
+				</div>
+
+				{#if pin_mismatch_hint}
+					<p class="pin-hint mono">PINs do not match</p>
+				{/if}
+
+				<div class="pin-cta">
+					<button
+						class="btn btn-primary btn-block"
+						disabled={pin_busy || !pins_match_and_valid}
+						onclick={pin_enable_or_change}>
+						{pin_busy ? 'saving...' : (auth?.has_pin ? 'Change PIN' : 'Enable PIN login')}
+					</button>
+				</div>
+
+				{#if auth?.has_pin}
+					<div class="danger-zone">
+						<div class="hairline danger"></div>
+						<button class="btn btn-danger btn-block btn-sm" disabled={pin_busy} onclick={pin_disable}>
+							Disable PIN login
+						</button>
+					</div>
+				{/if}
+			</article>
+
+			<!-- Restart strategy -->
+			<article class="card">
+				<header class="card-head">
+					<h2 class="serif">Process Daemon Strategy</h2>
+					<p>Automated restart behaviour upon receiving software updates.</p>
+				</header>
+				{#if s.systemd_unit}
+					<p>Running under systemd unit <code>{s.systemd_unit}</code>. Upon applying updates, the hub process restarts automatically with updated binaries.</p>
+				{:else}
+					<p>No systemd unit detected (<code>KRAKEN_SYSTEMD_UNIT</code> is unset). Falling back to detached process re-execution from <code>{s.hub_dir}</code>.</p>
+				{/if}
+			</article>
 		</div>
-
-		{#if pin_mismatch_hint}
-			<p class="pin-hint">PINs don't match</p>
-		{/if}
-
-		<div class="action-row pin-cta">
-			<button class="btn btn-primary"
-				disabled={pin_busy || !pins_match_and_valid}
-				onclick={pin_enable_or_change}>
-				{pin_busy ? 'saving...' : (auth?.has_pin ? 'Change PIN' : 'Enable PIN login')}
-			</button>
-		</div>
-
-		{#if auth?.has_pin}
-			<div class="danger-zone">
-				<div class="hairline danger"></div>
-				<button class="btn btn-danger btn-block btn-sm" disabled={pin_busy} onclick={pin_disable}>
-					Disable PIN login
-				</button>
-			</div>
-		{/if}
-	</article>
-
-	<!-- System info -->
-	<article class="card">
-		<header class="card-head">
-			<h2 class="serif">Environment &amp; Runtime</h2>
-			<p>Host server runtime configuration and active storage filesystem.</p>
-		</header>
-		<dl class="kv">
-			<div><dt>version</dt><dd class="mono">{s.version || '0.0.0'}</dd></div>
-			<div><dt>pid</dt><dd class="mono">{s.pid}</dd></div>
-			<div><dt>node / bun</dt><dd class="mono">{s.node_version}</dd></div>
-			<div><dt>uptime</dt><dd class="mono">{fmt_uptime(s.uptime_seconds)}</dd></div>
-			<div><dt>repo</dt><dd class="mono path">{s.repo_dir}</dd></div>
-			<div><dt>hub</dt><dd class="mono path">{s.hub_dir}</dd></div>
-			<div><dt>branch</dt><dd class="mono">{s.branch}</dd></div>
-			<div><dt>systemd unit</dt><dd class="mono">{s.systemd_unit || '(none)'}</dd></div>
-		</dl>
-	</article>
-
-	<!-- Restart strategy -->
-	<article class="card">
-		<header class="card-head">
-			<h2 class="serif">Process Daemon Strategy</h2>
-			<p>Automated restart behaviour upon receiving software updates.</p>
-		</header>
-		{#if s.systemd_unit}
-			<p>Running under systemd unit <code>{s.systemd_unit}</code>. Upon applying updates, the hub process restarts automatically with updated binaries.</p>
-		{:else}
-			<p>No systemd unit detected (<code>KRAKEN_SYSTEMD_UNIT</code> is unset). Falling back to detached process re-execution from <code>{s.hub_dir}</code>.</p>
-		{/if}
-	</article>
+	</div>
 {/if}
 
 <style>
 	.settings-header {
 		margin-bottom: 28px;
-		max-width: 740px;
+		max-width: 1000px;
 		padding-bottom: 20px;
 		border-bottom: 1px solid var(--color-border);
+	}
+	.settings-grid {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		gap: 28px;
+		align-items: start;
+	}
+	@media (max-width: 1024px) {
+		.settings-grid { grid-template-columns: 1fr; }
+	}
+	.settings-col {
+		display: flex;
+		flex-direction: column;
+		gap: 28px;
+		min-width: 0;
 	}
 	.nav-breadcrumbs { margin-bottom: 8px; }
 	.back-link {

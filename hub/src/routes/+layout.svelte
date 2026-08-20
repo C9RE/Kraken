@@ -42,12 +42,22 @@
 <style>
 	.app { display: flex; flex-direction: column; min-height: 100dvh; position: relative; z-index: 1; }
 	.app.bare main { padding: 0; max-width: none; }
-	main { flex: 1; padding: 36px 24px 64px; max-width: 1200px; width: 100%; margin: 0 auto; box-sizing: border-box; }
+	main {
+		flex: 1;
+		padding: 32px 36px 64px;
+		max-width: 1720px;
+		width: 100%;
+		margin: 0 auto;
+		box-sizing: border-box;
+	}
+	@media (max-width: 768px) {
+		main { padding: 20px 16px 48px; }
+	}
 	
 	.demo-banner {
 		background: linear-gradient(90deg, rgba(204, 185, 157, 0.15) 0%, rgba(154, 127, 62, 0.25) 50%, rgba(204, 185, 157, 0.15) 100%);
 		border-bottom: 1px solid rgba(204, 185, 157, 0.3);
-		padding: 7px 16px;
+		padding: 7px 20px;
 		font-size: 12px;
 		color: #f5e6c8;
 		text-align: center;
@@ -55,7 +65,7 @@
 		z-index: 101;
 	}
 	.demo-banner-wrap {
-		max-width: 1200px;
+		max-width: 1720px;
 		margin: 0 auto;
 		display: flex;
 		align-items: center;

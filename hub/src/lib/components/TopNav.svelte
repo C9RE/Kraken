@@ -51,7 +51,7 @@
 		display: grid;
 		grid-template-columns: auto 1fr;
 		align-items: center;
-		padding: 14px 28px;
+		padding: 14px 36px;
 		border-bottom: 1px solid var(--color-border);
 		background: rgba(10, 13, 17, 0.75);
 		backdrop-filter: blur(14px);

@@ -411,20 +411,26 @@
 	/* ─── Upload options well ─────────────────────────────────── */
 	.upload-options {
 		display: grid;
-		grid-template-columns: 1.2fr 1fr auto;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 		gap: 14px;
 		align-items: flex-end;
-		padding: 14px 16px;
+		padding: 16px;
 		background: rgba(14, 18, 23, 0.6);
 		border: 1px solid var(--color-border);
 		border-radius: 6px;
 		margin-bottom: 22px;
-	}
-	@media (max-width: 720px) {
-		.upload-options { grid-template-columns: 1fr; }
+		width: 100%;
+		box-sizing: border-box;
 	}
 
-	.opt-col { display: flex; flex-direction: column; gap: 5px; }
+	.opt-col {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		min-width: 0;
+		width: 100%;
+		box-sizing: border-box;
+	}
 	.opt-col-check { justify-content: flex-end; }
 	.opt-label {
 		font-size: 10.5px;
@@ -432,39 +438,52 @@
 		letter-spacing: 0.14em;
 		text-transform: uppercase;
 		color: var(--color-accent);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 	.opt-input, .opt-select {
-		height: 36px;
+		height: 38px;
 		font-size: 12.5px;
-		padding: 0 10px;
+		padding: 0 12px;
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border-strong);
 		border-radius: 6px;
+		width: 100%;
+		min-width: 0;
+		box-sizing: border-box;
+		color: #ffffff;
 	}
 	.opt-toggle-box {
-		height: 36px;
-		display: inline-flex;
+		height: 38px;
+		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: 10px;
 		padding: 0 12px;
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border-strong);
 		border-radius: 6px;
 		cursor: pointer;
 		user-select: none;
+		width: 100%;
+		min-width: 0;
+		box-sizing: border-box;
 	}
 	.opt-toggle-box input[type="checkbox"] {
-		width: 15px;
-		height: 15px;
+		width: 16px;
+		height: 16px;
 		accent-color: var(--color-accent);
 		cursor: pointer;
 		margin: 0;
+		flex-shrink: 0;
 	}
 	.opt-toggle-text {
 		font-size: 12px;
 		color: var(--color-ink-2);
 		font-weight: 500;
 		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	/* Spinner */
