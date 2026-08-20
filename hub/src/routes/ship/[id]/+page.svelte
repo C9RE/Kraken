@@ -206,7 +206,7 @@
 		<div class="col">
 			<article class="card">
 				<header class="card-head">
-					<h2 class="serif">rigging</h2>
+					<h2 class="serif">manifest &amp; settings</h2>
 					<p>edit the ship's configuration. saved values land in <code>.env</code>; restart to take effect.</p>
 				</header>
 				<div class="fields">

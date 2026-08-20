@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Kraken — Windrose Dedicated Server Fleet Manager</title>
+  <meta name="description" content="The self-hosted control plane and Docker fleet manager for Windrose dedicated servers. Zero SSH, 1-click drydock commissioning, drag-and-drop UE4SS & Pak mods, visual RocksDB difficulty tuning, and automated backups.">
+  <meta name="keywords" content="Windrose, Windrose dedicated server, Windrose server manager, Windrose docker, UE4SS mods, WindrosePlus, RocksDB WorldDescription, C9RE">
+  <meta name="author" content="C9RE">
+  <link rel="canonical" href="https://thekraken.cloud/">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://thekraken.cloud/">
+  <meta property="og:title" content="The Kraken — Windrose Dedicated Server Fleet Manager">
+  <meta property="og:description" content="One unified control plane for Windrose game servers. Commission ships, install UE4SS & Pak mods, tune world difficulty, and manage backups.">
+  <meta property="og:image" content="https://thekraken.cloud/assets/og-card.png">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://thekraken.cloud/">
+  <meta property="twitter:title" content="The Kraken — Windrose Dedicated Server Fleet Manager">
+  <meta property="twitter:description" content="The self-hosted control plane and Docker fleet manager for Windrose dedicated servers. Zero SSH, instant mods, visual difficulty tuning.">
+  <meta property="twitter:image" content="https://thekraken.cloud/assets/og-card.png">
+
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&family=JetBrains+Mono:wght@400;500;600;700&family=PT+Sans:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-abyss: #090b0e;
+      --bg-surface: #101318;
+      --bg-surface-2: #161b22;
+      --bg-surface-3: #1c222b;
+
+      --gold-light: #f3e6cd;
+      --gold-primary: #ccb99d;
+      --gold-dim: #9a7f3e;
+
+      --ocean-deep: #1b2e35;
+      --ocean-teal: #2a4a52;
+      --ocean-glow: #4da3b3;
+      --ocean-sage: #7b9c83;
+
+      --crimson: #b04d3e;
+      --rust: #c0704a;
+
+      --ink-pure: #f8f6f0;
+      --ink-main: #d5d3c7;
+      --ink-muted: #969389;
+      --ink-faint: #5e5c54;
+
+      --border-subtle: rgba(204, 185, 157, 0.10);
+      --border-strong: rgba(204, 185, 157, 0.22);
+      --border-glow: rgba(204, 185, 157, 0.45);
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+
+      --font-display: "Fraunces", Georgia, serif;
+      --font-body: "PT Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--bg-abyss);
+      color: var(--ink-main);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      background-color: var(--bg-abyss);
+      background-image: 
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(42, 74, 82, 0.35), transparent 70%),
+        radial-gradient(ellipse 60% 40% at 85% 60%, rgba(154, 127, 62, 0.08), transparent 60%),
+        radial-gradient(ellipse 50% 50% at 15% 85%, rgba(42, 74, 82, 0.15), transparent 70%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .tabular { font-variant-numeric: tabular-nums; }
+    .serif { font-family: var(--font-display); }
+    .mono { font-family: var(--font-mono); }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Header */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: rgba(9, 11, 14, 0.85);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--ink-pure);
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.25s ease;
+    }
+
+    .brand:hover .brand-icon {
+      transform: rotate(45deg);
+    }
+
+    .brand-text {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--gold-light);
+    }
+
+    .brand-sub {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--gold-dim);
+      padding: 2px 6px;
+      background: rgba(154, 127, 62, 0.12);
+      border-radius: 4px;
+      border: 1px solid rgba(154, 127, 62, 0.25);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      list-style: none;
+    }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+    }
+
+    .nav-links a {
+      color: var(--ink-main);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.15s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--gold-light);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      font-weight: 600;
+      font-family: var(--font-body);
+      text-decoration: none;
+      cursor: pointer;
+      transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+      min-height: 42px;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn-primary {
+      background: linear-gradient(180deg, #d8c5a8 0%, #ccb99d 100%);
+      color: #1a160f;
+      border: 1px solid #ebd9be;
+      box-shadow: 0 2px 10px rgba(204, 185, 157, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(180deg, #f0dfc5 0%, #d8c5a8 100%);
+      box-shadow: 0 4px 16px rgba(204, 185, 157, 0.4);
+    }
+
+    .btn-secondary {
+      background: var(--bg-surface-2);
+      color: var(--ink-pure);
+      border: 1px solid var(--border-strong);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-surface-3);
+      border-color: var(--gold-dim);
+      color: var(--gold-light);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(123, 156, 131, 0.12);
+      border: 1px solid rgba(123, 156, 131, 0.3);
+      border-radius: 9999px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--ocean-sage);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--ocean-sage);
+      box-shadow: 0 0 8px var(--ocean-sage);
+      animation: pulseDot 2.4s infinite;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    /* Hero */
+    .hero {
+      padding: 90px 0 60px;
+      text-align: center;
+      position: relative;
+    }
+
+    .hero-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(204, 185, 157, 0.08);
+      border: 1px solid var(--border-strong);
+      border-radius: 9999px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--gold-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(2.5rem, 5.5vw, 4.5rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ink-pure);
+      text-wrap: balance;
+      margin-bottom: 22px;
+      letter-spacing: -0.02em;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: var(--gold-light);
+      background: linear-gradient(135deg, #f5e6c8 0%, #ccb99d 60%, #9a7f3e 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-sub {
+      font-size: clamp(1.05rem, 1.8vw, 1.25rem);
+      color: var(--ink-main);
+      max-width: 780px;
+      margin: 0 auto 36px;
+      text-wrap: pretty;
+      font-weight: 400;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 48px;
+    }
+
+    .cli-box {
+      max-width: 720px;
+      margin: 0 auto 64px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+
+    .cli-code {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--gold-light);
+      white-space: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cli-code span.prompt {
+      color: var(--gold-dim);
+      user-select: none;
+    }
+
+    .cli-copy-btn {
+      background: var(--bg-surface-2);
+      border: 1px solid var(--border-subtle);
+      color: var(--ink-main);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .cli-copy-btn:hover {
+      background: var(--bg-surface-3);
+      color: var(--gold-light);
+      border-color: var(--gold-dim);
+    }
+
+    .cli-copy-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* Showcase Window */
+    .showcase {
+      margin-bottom: 90px;
+    }
+
+    .mockup-window {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 40px rgba(42, 74, 82, 0.2);
+      overflow: hidden;
+    }
+
+    .mockup-header {
+      background: var(--bg-surface-2);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .mockup-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .mockup-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .dot-red { background: #b04d3e; opacity: 0.8; }
+    .dot-amber { background: #c0704a; opacity: 0.8; }
+    .dot-green { background: #7b9c83; opacity: 0.8; }
+
+    .mockup-titlebar {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--ink-muted);
+      background: var(--bg-surface);
+      padding: 4px 16px;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .mockup-body {
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 860px) {
+      .mockup-body { grid-template-columns: 1fr; }
+    }
+
+    .ship-card-mock {
+      background: var(--bg-surface-2);
+      border: 1px solid var(--border-glow);
+      background: linear-gradient(180deg, rgba(22, 27, 34, 0.9) 0%, rgba(28, 34, 43, 0.9) 100%);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      text-align: left;
+    }
+
+    .ship-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+
+    .ship-name {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--gold-light);
+    }
+
+    .ship-slug {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--ink-muted);
+    }
+
+    .ship-stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .stat-box {
+      background: var(--bg-surface);
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .stat-label {
+      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      color: var(--ink-muted);
+    }
+
+    .stat-val {
+      font-size: 0.85rem;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--ink-pure);
+    }
+
+    .stat-val.invite {
+      color: var(--gold-primary);
+      letter-spacing: 0.05em;
+    }
+
+    .ship-controls {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .mock-ctrl-btn {
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      color: var(--ink-main);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .mock-ctrl-btn:hover {
+      border-color: var(--gold-dim);
+      color: var(--gold-light);
+    }
+
+    .terminal-panel {
+      background: #080a0d;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: #9ab3ba;
+      line-height: 1.5;
+      text-align: left;
+      height: 320px;
+      overflow-y: hidden;
+    }
+
+    .log-line { margin-bottom: 4px; }
+    .log-info { color: var(--ocean-glow); }
+    .log-gold { color: var(--gold-primary); }
+    .log-green { color: var(--ocean-sage); }
+    .log-faint { color: var(--ink-faint); }
+
+    /* Features */
+    .section {
+      padding: 80px 0;
+    }
+
+    .section-header {
+      text-align: center;
+      max-width: 680px;
+      margin: 0 auto 56px;
+    }
+
+    .section-kicker {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--gold-dim);
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 3.5vw, 2.75rem);
+      font-weight: 700;
+      color: var(--ink-pure);
+      line-height: 1.2;
+      margin-bottom: 16px;
+      text-wrap: balance;
+    }
+
+    .section-desc {
+      font-size: 1rem;
+      color: var(--ink-main);
+      text-wrap: pretty;
+    }
+
+    .pillar-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .pillar-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 28px 24px;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .pillar-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--border-strong);
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .pillar-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: rgba(204, 185, 157, 0.08);
+      border: 1px solid var(--border-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      margin-bottom: 20px;
+      color: var(--gold-light);
+    }
+
+    .pillar-card h3 {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--ink-pure);
+      margin-bottom: 10px;
+    }
+
+    .pillar-card p {
+      font-size: 0.92rem;
+      color: var(--ink-muted);
+      line-height: 1.6;
+    }
+
+    /* Interactive Voyage */
+    .interactive-voyage {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-lg);
+      padding: 36px;
+      margin-top: 40px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 36px;
+      align-items: center;
+    }
+
+    @media (max-width: 900px) {
+      .interactive-voyage { grid-template-columns: 1fr; padding: 24px; }
+    }
+
+    .voyage-controls {
+      text-align: left;
+    }
+
+    .preset-selector {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .preset-btn {
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      background: var(--bg-surface-2);
+      color: var(--ink-main);
+      border: 1px solid var(--border-subtle);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .preset-btn.active {
+      background: var(--gold-dim);
+      color: #0b0d10;
+      font-weight: 700;
+      border-color: var(--gold-light);
+    }
+
+    .slider-group {
+      margin-bottom: 18px;
+    }
+
+    .slider-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      font-family: var(--font-mono);
+      color: var(--ink-main);
+      margin-bottom: 6px;
+    }
+
+    .slider-val {
+      color: var(--gold-light);
+      font-weight: 600;
+    }
+
+    input[type=range] {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--bg-surface-3);
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--gold-light);
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(204, 185, 157, 0.5);
+    }
+
+    .json-preview-card {
+      background: #090b0e;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: #9ab3ba;
+      line-height: 1.5;
+      text-align: left;
+      height: 100%;
+      min-height: 280px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .json-header {
+      font-size: 0.7rem;
+      color: var(--ink-faint);
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Specs Table */
+    .specs-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-top: 36px;
+    }
+
+    .specs-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.88rem;
+    }
+
+    .specs-table th {
+      background: var(--bg-surface-2);
+      padding: 14px 20px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--gold-primary);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .specs-table td {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--ink-main);
+    }
+
+    .specs-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .specs-table td code {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--gold-light);
+      background: var(--bg-surface-2);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* FAQ */
+    .faq-list {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .faq-item {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: border-color 0.2s ease;
+    }
+
+    .faq-item:hover {
+      border-color: var(--border-strong);
+    }
+
+    .faq-question {
+      padding: 18px 22px;
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--ink-pure);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+
+    .faq-toggle-icon {
+      font-family: var(--font-mono);
+      font-size: 1.2rem;
+      color: var(--gold-primary);
+      transition: transform 0.2s ease;
+    }
+
+    .faq-answer {
+      padding: 0 22px 18px;
+      font-size: 0.92rem;
+      color: var(--ink-muted);
+      line-height: 1.6;
+      display: none;
+    }
+
+    .faq-item.open .faq-answer {
+      display: block;
+    }
+
+    .faq-item.open .faq-toggle-icon {
+      transform: rotate(45deg);
+    }
+
+    /* Footer */
+    .footer {
+      border-top: 1px solid var(--border-subtle);
+      padding: 60px 0 40px;
+      background: #07080a;
+      margin-top: 80px;
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+
+    .footer-left {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .footer-copy {
+      font-size: 0.85rem;
+      color: var(--ink-muted);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+      list-style: none;
+    }
+
+    .footer-links a {
+      color: var(--ink-main);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: color 0.15s ease;
+    }
+
+    .footer-links a:hover {
+      color: var(--gold-light);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <header class="header">
+    <div class="container">
+      <nav class="nav-inner" aria-label="Main Navigation">
+        <a href="/" class="brand">
+          <div class="brand-icon">
+            <svg width="34" height="34" viewBox="0 0 64 64" fill="none">
+              <circle cx="32" cy="32" r="28" fill="#1b2e35" fill-opacity="0.5"/>
+              <circle cx="32" cy="32" r="26" stroke="#ccb99d" stroke-width="1.5" stroke-opacity="0.5" stroke-dasharray="3 3"/>
+              <path d="M 32,10 L 35,26 L 51,13 L 38,29 L 54,32 L 38,35 L 51,51 L 35,38 L 32,54 L 29,38 L 13,51 L 26,35 L 10,32 L 26,29 L 13,13 L 29,26 Z" fill="#ccb99d"/>
+              <circle cx="32" cy="32" r="7" fill="#0b0d10" stroke="#ccb99d" stroke-width="1.5"/>
+              <circle cx="32" cy="32" r="3" fill="#ccb99d"/>
+            </svg>
+          </div>
+          <span class="brand-text">THE KRAKEN</span>
+          <span class="brand-sub">v1.6.4</span>
+        </a>
+
+        <ul class="nav-links">
+          <li><a href="#features">Features</a></li>
+          <li><a href="#rigging">Rigging &amp; Mods</a></li>
+          <li><a href="#voyage">Voyage Tuning</a></li>
+          <li><a href="#quickstart">Quickstart</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+
+        <div class="nav-actions">
+          <div class="status-badge" title="Docker Container v1.6.4 Healthy">
+            <span class="status-dot"></span>
+            <span>AppID 4129620</span>
+          </div>
+          <a href="https://github.com/C9RE/Kraken" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+            <span>GitHub</span>
+          </a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <main>
+    <section class="hero">
+      <div class="container">
+        <div class="hero-kicker">
+          <span>⚓</span>
+          <span>Self-Hosted Windrose Server Manager</span>
+        </div>
+
+        <h1>Release the <em>Dedicated Server</em>.</h1>
+        <p class="hero-sub">
+          The all-in-one control plane and Docker fleet orchestrator for <strong>Windrose</strong>. 
+          Commission isolated game worlds in seconds, install UE4SS &amp; Pak mods via drag-and-drop, calibrate RocksDB difficulty presets with visual sliders, and trigger zero-downtime backups.
+        </p>
+
+        <div class="hero-actions">
+          <a href="#quickstart" class="btn btn-primary">Deploy Your Fleet</a>
+          <a href="https://github.com/C9RE/Kraken" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">View Source on GitHub ↗</a>
+        </div>
+
+        <!-- 1-Click CLI Installer -->
+        <div class="cli-box">
+          <div class="cli-code">
+            <span class="prompt">$</span>
+            <span id="installCmd">git clone https://github.com/C9RE/Kraken.git && cd Kraken/hub && bun install && bun run build && PORT=8783 bun run start</span>
+          </div>
+          <button class="cli-copy-btn" id="copyBtn" onclick="copyInstallCmd()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span>Copy</span>
+          </button>
+        </div>
+
+        <!-- Showcase Window -->
+        <div class="showcase">
+          <div class="mockup-window">
+            <div class="mockup-header">
+              <div class="mockup-dots">
+                <div class="mockup-dot dot-red"></div>
+                <div class="mockup-dot dot-amber"></div>
+                <div class="mockup-dot dot-green"></div>
+              </div>
+              <div class="mockup-titlebar">kraken-hub:8783 — ship:portal (The Mariner)</div>
+              <div class="status-badge">
+                <span class="status-dot"></span>
+                <span>Active &amp; Healthy</span>
+              </div>
+            </div>
+
+            <div class="mockup-body">
+              <!-- Ship Card -->
+              <div class="ship-card-mock">
+                <div class="ship-head">
+                  <div>
+                    <div class="ship-name">Portal · Sea of Skulls</div>
+                    <div class="ship-slug">container: windrose-portal</div>
+                  </div>
+                  <span class="status-badge">Running</span>
+                </div>
+
+                <div class="ship-stats-grid">
+                  <div class="stat-box">
+                    <div class="stat-label">Invite Code</div>
+                    <div class="stat-val invite tabular" id="mockInvite">3f1f4cf6</div>
+                  </div>
+                  <div class="stat-box">
+                    <div class="stat-label">Port (UDP)</div>
+                    <div class="stat-val tabular">7777 / 7778</div>
+                  </div>
+                  <div class="stat-box">
+                    <div class="stat-label">Headcount</div>
+                    <div class="stat-val tabular">4 / 8 Players</div>
+                  </div>
+                  <div class="stat-box">
+                    <div class="stat-label">World Size</div>
+                    <div class="stat-val tabular">3.44 GB</div>
+                  </div>
+                </div>
+
+                <div class="ship-controls">
+                  <button class="mock-ctrl-btn" onclick="triggerMockAction('Restarting server...')">Restart</button>
+                  <button class="mock-ctrl-btn" onclick="triggerMockAction('Creating hot tarball save...')">Backup</button>
+                  <button class="mock-ctrl-btn" onclick="triggerMockAction('Pulling latest v1.6.4 image...')">Refit</button>
+                  <button class="mock-ctrl-btn" onclick="triggerMockAction('Copying invite code to clipboard!')">Copy Code</button>
+                </div>
+              </div>
+
+              <!-- Terminal -->
+              <div class="terminal-panel" id="terminalPanel">
+                <div class="log-line log-faint">[Kraken Engine] Initialising host networking container (Steam AppID 4129620)...</div>
+                <div class="log-line log-info">[WineHQ] Prefix verified at /home/steam/.wine (x86_64, Windows 10)</div>
+                <div class="log-line log-info">[SteamCMD] Validating Windrose Dedicated Server files... OK (build 184920)</div>
+                <div class="log-line">[Engine] Mounting UE4SS 3.0.1 Beta loader into R5/Binaries/Win64/ue4ss</div>
+                <div class="log-line log-green">[UE4SS] mods.json synced: 4 Lua mods, 2 Native DLLs, 1 LogicPak active</div>
+                <div class="log-line log-gold">[WindroseServer] RocksDB_v2 Save Profile loaded: Worlds/241EC1BB076940748DAD0C0367D89556</div>
+                <div class="log-line log-info">[ICE Gateway] Registered with r5coopapigateway-eu-release.windrose.support:443</div>
+                <div class="log-line log-gold">[Matchmaking] Invite code generated: 3f1f4cf6 (Ready for crew)</div>
+                <div class="log-line log-green">[Kraken] Server listening on 0.0.0.0:7777 (UDP). Harbor is open.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 4 Pillars Section -->
+    <section class="section" id="features">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-kicker">Architected for Captains</div>
+          <h2 class="section-title">Everything you need to command a Windrose fleet.</h2>
+          <p class="section-desc">Designed to replace messy SSH terminal sessions with an intuitive, hyper-responsive management interface.</p>
+        </div>
+
+        <div class="pillar-grid">
+          <!-- Pillar 1 -->
+          <div class="pillar-card">
+            <div class="pillar-icon">⚓</div>
+            <h3>Multi-Vessel Drydock</h3>
+            <p>Commission new server instances with a single click. Kraken automatically provisions dedicated port pairs (7777, 7787, 7797) and writes isolated compose stacks on disk so servers never collide.</p>
+          </div>
+
+          <!-- Pillar 2 -->
+          <div class="pillar-card" id="rigging">
+            <div class="pillar-icon">🏴‍☠️</div>
+            <h3>Zero-Touch Mod Rigging</h3>
+            <p>Drag and drop <code>.zip</code>, <code>.lua</code>, <code>.dll</code>, and Unreal <code>.pak</code>/<code>.ucas</code>/<code>.utoc</code> files straight into the browser. Kraken maintains dual sync across <code>mods.json</code> and <code>mods.txt</code> and auto-detects WindrosePlus.</p>
+          </div>
+
+          <!-- Pillar 3 -->
+          <div class="pillar-card" id="voyage">
+            <div class="pillar-icon">🧭</div>
+            <h3>Visual Voyage Tuning</h3>
+            <p>Fine-tune world difficulty, mob health, boarding challenges, and co-op scaling multipliers with smooth visual sliders that write safely to <code>WorldDescription.json</code> without live flush corruption.</p>
+          </div>
+
+          <!-- Pillar 4 -->
+          <div class="pillar-card">
+            <div class="pillar-icon">📦</div>
+            <h3>Cargo Hold Hot Backups</h3>
+            <p>Create timestamped <code>.tar.gz</code> world archives on demand or on schedule. Kraken checks for active players before executing to guarantee zero save state corruption.</p>
+          </div>
+        </div>
+
+        <!-- Interactive Voyage Preset Sandbox -->
+        <div class="interactive-voyage">
+          <div class="voyage-controls">
+            <div class="section-kicker">Interactive Sandbox</div>
+            <h3 class="serif" style="font-size: 1.5rem; color: var(--gold-light); margin-bottom: 12px;">Live World Difficulty Engine</h3>
+            <p style="font-size: 0.9rem; color: var(--ink-muted); margin-bottom: 20px;">
+              Select a preset or customize multipliers. Kraken compiles them into escaped JSON parameters for RocksDB.
+            </p>
+
+            <div class="preset-selector">
+              <button class="preset-btn" onclick="applyPreset('Easy', event)">Easy</button>
+              <button class="preset-btn active" onclick="applyPreset('Medium', event)">Normal</button>
+              <button class="preset-btn" onclick="applyPreset('Hard', event)">Hardcore</button>
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-label-row">
+                <span>Enemy Health Multiplier</span>
+                <span class="slider-val tabular" id="mobHpVal">1.00x</span>
+              </div>
+              <input type="range" id="mobHpSlider" min="0.2" max="5.0" step="0.05" value="1.0" oninput="updateVoyagePreview()">
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-label-row">
+                <span>Enemy Damage Multiplier</span>
+                <span class="slider-val tabular" id="mobDmgVal">1.00x</span>
+              </div>
+              <input type="range" id="mobDmgSlider" min="0.2" max="5.0" step="0.05" value="1.0" oninput="updateVoyagePreview()">
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-label-row">
+                <span>Player Ship Hull Integrity</span>
+                <span class="slider-val tabular" id="shipHpVal">1.00x</span>
+              </div>
+              <input type="range" id="shipHpSlider" min="0.4" max="5.0" step="0.05" value="1.0" oninput="updateVoyagePreview()">
+            </div>
+          </div>
+
+          <div class="json-preview-card">
+            <div class="json-header">
+              <span>WorldDescription.json</span>
+              <span id="presetTypeBadge" style="color: var(--gold-primary);">Preset: Medium</span>
+            </div>
+            <pre id="jsonCode" style="color: #9ab3ba; font-size: 0.76rem; overflow-x: auto;">{
+  "Preset": "Medium",
+  "CombatDifficulty": "Normal",
+  "Parameters": {
+    "WDS.Parameter.MobHealthMultiplier": 1.0,
+    "WDS.Parameter.MobDamageMultiplier": 1.0,
+    "WDS.Parameter.ShipsHealthMultiplier": 1.0,
+    "WDS.Parameter.Coop.SharedQuests": true
+  }
+}</pre>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Specifications Table -->
+    <section class="section" style="background: rgba(16, 19, 24, 0.4); border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-kicker">Technical Specifications</div>
+          <h2 class="section-title">Modding &amp; Architecture Reference</h2>
+          <p class="section-desc">Kraken handles all Windrose mod layouts and network requirements out of the box.</p>
+        </div>
+
+        <div class="specs-card">
+          <table class="specs-table">
+            <thead>
+              <tr>
+                <th>Mod Type / Upload</th>
+                <th>Target Filesystem Path</th>
+                <th>Activation &amp; Registry Protocol</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>UE4SS Zip Bundle</strong></td>
+                <td><code>data/R5/Binaries/Win64/ue4ss/Mods/&lt;name&gt;/</code></td>
+                <td>Synced to <code>mods.json</code> &amp; <code>mods.txt</code> (CRLF, pinned keybinds)</td>
+              </tr>
+              <tr>
+                <td><strong>Pak Mod (.pak / .ucas)</strong></td>
+                <td><code>data/R5/Content/Paks/~mods/</code></td>
+                <td>Loaded natively by Unreal Engine at process boot</td>
+              </tr>
+              <tr>
+                <td><strong>Logic Pak (.pak)</strong></td>
+                <td><code>data/R5/Content/Paks/LogicMods/</code></td>
+                <td>Handled via built-in BPModLoaderMod</td>
+              </tr>
+              <tr>
+                <td><strong>Native DLL (.dll)</strong></td>
+                <td><code>data/R5/Binaries/Win64/ue4ss/Mods/&lt;name&gt;/dlls/</code></td>
+                <td>Generates <code>enabled.txt</code> sentinel file in mod directory</td>
+              </tr>
+              <tr>
+                <td><strong>WindrosePlus Framework</strong></td>
+                <td><code>data/windrose_plus_data/</code></td>
+                <td>Preserves specialized <code>UE4SS-settings.ini</code> hook configurations</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quickstart -->
+    <section class="section" id="quickstart">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-kicker">Deploy in 60 Seconds</div>
+          <h2 class="section-title">Launch Your Windrose Server</h2>
+          <p class="section-desc">Run via the SvelteKit Hub dashboard or as a standalone headless Docker container.</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+          <!-- Hub Option -->
+          <div class="pillar-card" style="border-color: var(--border-glow); background: linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-surface-2) 100%);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+              <span class="status-badge" style="background: rgba(204, 185, 157, 0.15); color: var(--gold-light); border-color: var(--gold-dim);">Recommended</span>
+              <span class="mono" style="font-size: 0.8rem; color: var(--ink-muted);">Web GUI + API</span>
+            </div>
+            <h3 style="font-size: 1.4rem; margin-bottom: 8px;">Kraken Hub</h3>
+            <p style="margin-bottom: 20px;">Full web dashboard with multi-server support, visual mod drag-drop, difficulty tuner, and log book.</p>
+
+            <div style="background: #080a0d; padding: 14px; border-radius: 8px; border: 1px solid var(--border-subtle); margin-bottom: 20px;">
+              <pre class="mono" style="font-size: 0.78rem; color: var(--gold-light); line-height: 1.6;">git clone https://github.com/C9RE/Kraken.git
+cd Kraken/hub
+bun install
+bun run build
+PORT=8783 bun run start</pre>
+            </div>
+
+            <a href="https://github.com/C9RE/Kraken" class="btn btn-primary" style="width: 100%;" target="_blank" rel="noopener noreferrer">Clone on GitHub</a>
+          </div>
+
+          <!-- Standalone Docker Option -->
+          <div class="pillar-card">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+              <span class="status-badge">Headless</span>
+              <span class="mono" style="font-size: 0.8rem; color: var(--ink-muted);">Docker CLI</span>
+            </div>
+            <h3 style="font-size: 1.4rem; margin-bottom: 8px;">Docker Compose</h3>
+            <p style="margin-bottom: 20px;">Run a single dedicated server stack directly via Docker Compose without the web UI.</p>
+
+            <div style="background: #080a0d; padding: 14px; border-radius: 8px; border: 1px solid var(--border-subtle); margin-bottom: 20px;">
+              <pre class="mono" style="font-size: 0.78rem; color: var(--ink-main); line-height: 1.6;">git clone https://github.com/C9RE/Kraken.git
+cd Kraken
+cp .env.example .env
+docker compose up -d</pre>
+            </div>
+
+            <a href="https://github.com/C9RE/Kraken#the-docker-image" class="btn btn-secondary" style="width: 100%;" target="_blank" rel="noopener noreferrer">Docker Documentation</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section" id="faq">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-kicker">Answers for Captains</div>
+          <h2 class="section-title">Frequently Asked Questions</h2>
+        </div>
+
+        <div class="faq-list">
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-question">
+              <span>Do I need Wine or Steam installed on my host server?</span>
+              <span class="faq-toggle-icon">+</span>
+            </div>
+            <div class="faq-answer">
+              No. WineHQ (x86_64), Xvfb, and SteamCMD are entirely containerized inside the Docker image. You only need Docker Engine with Compose v2+ and Bun/Node on the host.
+            </div>
+          </div>
+
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-question">
+              <span>What are the system and CPU requirements?</span>
+              <span class="faq-toggle-icon">+</span>
+            </div>
+            <div class="faq-answer">
+              Windrose dedicated server binaries require a CPU with <strong>AVX / AVX2 instructions</strong> (Intel Haswell / AMD Zen or newer). Additionally, IPv6 must be enabled in the host kernel, and the container runs with <code>network_mode: host</code> to bind game ports and NAT traversal sockets.
+            </div>
+          </div>
+
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-question">
+              <span>How do players connect to my server?</span>
+              <span class="faq-toggle-icon">+</span>
+            </div>
+            <div class="faq-answer">
+              Windrose uses peer-to-peer NAT traversal with an 8-character hex <strong>Invite Code</strong> (e.g. <code>3f1f4cf6</code>) generated on boot. Players enter this invite code in the game client to connect seamlessly without port forwarding. Direct IP/port connection is also supported.
+            </div>
+          </div>
+
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-question">
+              <span>Can I run multiple separate Windrose worlds on one machine?</span>
+              <span class="faq-toggle-icon">+</span>
+            </div>
+            <div class="faq-answer">
+              Yes. Kraken Hub was specifically engineered for fleet management. Each commissioned ship receives its own isolated directory, separate <code>.env</code> file, isolated save profiles, and auto-incremented port allocations (7777, 7787, 7797, etc.).
+            </div>
+          </div>
+
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-question">
+              <span>Is there built-in password or PIN authentication?</span>
+              <span class="faq-toggle-icon">+</span>
+            </div>
+            <div class="faq-answer">
+              Yes. Kraken Hub includes optional scrypt-hashed PIN authentication (4-12 digits) with per-IP rate limiting (5 failed attempts per 15 minutes) and signed session cookies.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-left">
+          <div class="brand" style="gap: 8px;">
+            <span class="brand-text" style="font-size: 1.1rem;">THE KRAKEN</span>
+            <span class="brand-sub">thekraken.cloud</span>
+          </div>
+          <p class="footer-copy">Built for the high seas by <a href="https://c9re.com" style="color: var(--gold-light); text-decoration: none;">C9RE</a> · MIT License</p>
+        </div>
+
+        <ul class="footer-links">
+          <li><a href="https://github.com/C9RE/Kraken" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+          <li><a href="https://store.steampowered.com/app/3041230/Windrose/" target="_blank" rel="noopener noreferrer">Windrose on Steam</a></li>
+          <li><a href="https://c9re.com" target="_blank" rel="noopener noreferrer">C9RE</a></li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function copyInstallCmd() {
+      const text = document.getElementById("installCmd").innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById("copyBtn");
+        const orig = btn.innerHTML;
+        btn.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7b9c83" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span style="color: #7b9c83;">Copied!</span>
+        `;
+        setTimeout(() => { btn.innerHTML = orig; }, 2000);
+      });
+    }
+
+    function triggerMockAction(msg) {
+      const term = document.getElementById("terminalPanel");
+      const el = document.createElement("div");
+      el.className = "log-line log-gold";
+      el.innerText = `[Action] ${msg}`;
+      term.appendChild(el);
+      term.scrollTop = term.scrollHeight;
+    }
+
+    function toggleFaq(item) {
+      item.classList.toggle("open");
+    }
+
+    const presets = {
+      Easy: { mobHp: 0.7, mobDmg: 0.7, shipHp: 1.5, combat: "Easy" },
+      Medium: { mobHp: 1.0, mobDmg: 1.0, shipHp: 1.0, combat: "Normal" },
+      Hard: { mobHp: 1.5, mobDmg: 1.5, shipHp: 0.7, combat: "Hard" }
+    };
+
+    function applyPreset(name, ev) {
+      document.querySelectorAll(".preset-btn").forEach(b => b.classList.remove("active"));
+      if (ev && ev.target) ev.target.classList.add("active");
+      const p = presets[name];
+      document.getElementById("mobHpSlider").value = p.mobHp;
+      document.getElementById("mobDmgSlider").value = p.mobDmg;
+      document.getElementById("shipHpSlider").value = p.shipHp;
+      document.getElementById("presetTypeBadge").innerText = `Preset: ${name}`;
+      updateVoyagePreview(name, p.combat);
+    }
+
+    function updateVoyagePreview(presetName = "Custom", combat = "Normal") {
+      const mobHp = parseFloat(document.getElementById("mobHpSlider").value).toFixed(2);
+      const mobDmg = parseFloat(document.getElementById("mobDmgSlider").value).toFixed(2);
+      const shipHp = parseFloat(document.getElementById("shipHpSlider").value).toFixed(2);
+
+      document.getElementById("mobHpVal").innerText = `${mobHp}x`;
+      document.getElementById("mobDmgVal").innerText = `${mobDmg}x`;
+      document.getElementById("shipHpVal").innerText = `${shipHp}x`;
+
+      const code = {
+        Preset: presetName,
+        CombatDifficulty: combat,
+        Parameters: {
+          "WDS.Parameter.MobHealthMultiplier": parseFloat(mobHp),
+          "WDS.Parameter.MobDamageMultiplier": parseFloat(mobDmg),
+          "WDS.Parameter.ShipsHealthMultiplier": parseFloat(shipHp),
+          "WDS.Parameter.Coop.SharedQuests": true
+        }
+      };
+
+      document.getElementById("jsonCode").innerText = JSON.stringify(code, null, 2);
+    }
+  </script>
+</body>
+</html>

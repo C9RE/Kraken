@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f5e6c8"/>
+      <stop offset="50%" stop-color="#ccb99d"/>
+      <stop offset="100%" stop-color="#9a7f3e"/>
+    </linearGradient>
+    <linearGradient id="oceanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1b2e35"/>
+      <stop offset="100%" stop-color="#0a0f12"/>
+    </linearGradient>
+    <radialGradient id="abyss" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2a4a52" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#0b0d10" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background rounded coin -->
+  <rect width="64" height="64" rx="16" fill="#0b0d10"/>
+  <circle cx="32" cy="32" r="28" fill="url(#abyss)"/>
+  <circle cx="32" cy="32" r="26" stroke="url(#goldGrad)" stroke-width="1.5" stroke-opacity="0.4" stroke-dasharray="3 3"/>
+
+  <!-- Kraken Sigil / Compass -->
+  <g transform="translate(32, 32)">
+    <!-- Central nautical compass star points -->
+    <path d="M 0,-22 L 3,-6 L 19,-19 L 6,-3 L 22,0 L 6,3 L 19,19 L 3,6 L 0,22 L -3,6 L -19,19 L -6,3 L -22,0 L -6,-3 L -19,-19 L -3,-6 Z" fill="url(#goldGrad)" opacity="0.95"/>
+    
+    <!-- Inner Abyssal Eye Ring -->
+    <circle cx="0" cy="0" r="7.5" fill="#0a0d10" stroke="url(#goldGrad)" stroke-width="1.5"/>
+    <circle cx="0" cy="0" r="3.5" fill="#ccb99d"/>
+    <circle cx="0" cy="0" r="1.5" fill="#0a0d10"/>
+
+    <!-- Subtle cardinal ring markers -->
+    <circle cx="0" cy="-16" r="1" fill="#ccb99d"/>
+    <circle cx="16" cy="0" r="1" fill="#ccb99d"/>
+    <circle cx="0" cy="16" r="1" fill="#ccb99d"/>
+    <circle cx="-16" cy="0" r="1" fill="#ccb99d"/>
+  </g>
+</svg>
