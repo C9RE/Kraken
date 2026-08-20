@@ -162,35 +162,64 @@
       color: var(--ink-1);
       transition: opacity 0.15s;
     }
-    .brand:hover { opacity: 0.9; }
+    .brand:hover { opacity: 0.98; }
+
+    .brand-mark-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .brand-mark-wrap::before {
+      content: '';
+      position: absolute;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(232, 215, 190, 0.25) 0%, transparent 70%);
+      opacity: 0.6;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .brand:hover .brand-mark-wrap::before {
+      opacity: 1;
+      transform: scale(1.25);
+    }
 
     .brand-mark {
-      width: 28px;
-      height: 28px;
-      color: var(--gold);
+      width: 32px;
+      height: 32px;
+      color: var(--gold-bright);
       flex-shrink: 0;
+      transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s;
+      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.9));
+    }
+    .brand:hover .brand-mark {
+      transform: rotate(180deg) scale(1.12);
+      filter: drop-shadow(0 0 12px rgba(232, 215, 190, 0.85));
     }
 
     .brand-name {
       font-family: var(--font-serif);
-      font-size: 17px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--gold-bright);
+      color: #ffffff;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9), 0 0 20px rgba(204, 185, 157, 0.3);
     }
 
     .brand-pill {
       font-family: var(--font-mono);
       font-size: 10.5px;
-      font-weight: 500;
-      letter-spacing: 0.06em;
-      color: var(--gold);
-      background: var(--gold-soft);
-      border: 1px solid var(--gold-border);
-      padding: 2px 7px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--gold-bright);
+      background: rgba(204, 185, 157, 0.14);
+      border: 1px solid var(--gold-border-bright);
+      padding: 2px 8px;
       border-radius: 4px;
       text-transform: uppercase;
+      box-shadow: 0 0 10px rgba(204, 185, 157, 0.2);
     }
 
     .nav-links {
@@ -212,11 +241,11 @@
     .btn-nav {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
       background: var(--gold-soft);
       border: 1px solid var(--gold-border);
       color: var(--gold-bright);
-      padding: 6px 14px;
+      padding: 6px 12px;
       font-size: 12.5px;
       font-weight: 600;
       letter-spacing: 0.04em;
@@ -225,11 +254,35 @@
       transition: background 0.15s, border-color 0.15s, transform 0.1s;
     }
     .btn-nav:hover {
-      background: rgba(204, 185, 157, 0.15);
+      background: rgba(204, 185, 157, 0.18);
       border-color: var(--gold-border-bright);
       transform: translateY(-1px);
     }
     .btn-nav:active { transform: scale(0.96); }
+
+    .nav-stars, .hero-star-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gold-bright);
+      background: rgba(7, 9, 12, 0.65);
+      border: 1px solid var(--gold-border);
+      padding: 1.5px 6px;
+      border-radius: 4px;
+      font-variant-numeric: tabular-nums;
+      margin-left: 2px;
+    }
+    .btn-primary .hero-star-pill {
+      background: rgba(8, 10, 13, 0.22);
+      border-color: rgba(8, 10, 13, 0.35);
+      color: #080a0d;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 2px 8px;
+    }
 
     /* Hero Section */
     section.hero {
@@ -837,12 +890,14 @@
   <header class="masthead">
     <div class="wrap nav-inner">
       <a href="/" class="brand">
-        <svg class="brand-mark" viewBox="0 0 48 48" fill="none">
-          <circle cx="24" cy="24" r="22" stroke="currentColor" stroke-width="1.5" stroke-opacity="0.5" stroke-dasharray="3 3"/>
-          <path d="M 24,4 L 27,18 L 40,7 L 29,20 L 44,24 L 29,28 L 40,41 L 27,30 L 24,44 L 21,30 L 8,41 L 19,28 L 4,24 L 19,20 L 8,7 L 21,18 Z" fill="currentColor"/>
-          <circle cx="24" cy="24" r="5" fill="#07090c" stroke="currentColor" stroke-width="1.5"/>
-          <circle cx="24" cy="24" r="2" fill="#e8d7be"/>
-        </svg>
+        <span class="brand-mark-wrap">
+          <svg class="brand-mark" viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="22" stroke="currentColor" stroke-width="1.5" stroke-opacity="0.5" stroke-dasharray="3 3"/>
+            <path d="M 24,4 L 27,18 L 40,7 L 29,20 L 44,24 L 29,28 L 40,41 L 27,30 L 24,44 L 21,30 L 8,41 L 19,28 L 4,24 L 19,20 L 8,7 L 21,18 Z" fill="currentColor"/>
+            <circle cx="24" cy="24" r="5" fill="#07090c" stroke="currentColor" stroke-width="1.5"/>
+            <circle cx="24" cy="24" r="2" fill="#e8d7be"/>
+          </svg>
+        </span>
         <span class="brand-name">Kraken</span>
         <span class="brand-pill">Hub</span>
       </a>
@@ -852,9 +907,10 @@
         <a href="#rigging" class="nav-link">Rigging</a>
         <a href="#deploy" class="nav-link">Deploy</a>
         <a href="#faq" class="nav-link">FAQ</a>
-        <a href="https://github.com/C9RE/Kraken" class="btn-nav" target="_blank" rel="noopener">
+        <a href="https://github.com/C9RE/Kraken" class="btn-nav" target="_blank" rel="noopener" aria-label="Kraken repository on GitHub">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
           <span>GitHub</span>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17 17 7M9 7h8v8"/></svg>
+          <span class="nav-stars" id="navStarCount">★ <span class="num">Star</span></span>
         </a>
       </nav>
     </div>
@@ -878,6 +934,7 @@
           <a href="https://github.com/C9RE/Kraken" class="btn-primary" target="_blank" rel="noopener">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
             <span>Star on GitHub</span>
+            <span class="hero-star-pill" id="heroStarCount">★ <span class="num">Star</span></span>
           </a>
           <a href="#deploy" class="btn-secondary">
             <span>Quickstart Guide ↓</span>
@@ -1166,6 +1223,21 @@ docker compose up -d
       const item = el.parentElement;
       item.classList.toggle('open');
     }
+
+    // Live GitHub stars fetcher
+    fetch('https://api.github.com/repos/C9RE/Kraken')
+      .then(res => res.json())
+      .then(data => {
+        if (data && typeof data.stargazers_count === 'number') {
+          const stars = data.stargazers_count;
+          const starFormatted = stars.toLocaleString();
+          const navStars = document.getElementById('navStarCount');
+          const heroStars = document.getElementById('heroStarCount');
+          if (navStars) navStars.innerHTML = `★ <span class="num">${starFormatted}</span>`;
+          if (heroStars) heroStars.innerHTML = `★ <span class="num">${starFormatted}</span>`;
+        }
+      })
+      .catch(() => {});
   </script>
 </body>
 </html>
