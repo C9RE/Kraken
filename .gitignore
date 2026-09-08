@@ -21,6 +21,15 @@ brokol/
 
 # Local backups
 /backups/
+*.tar.gz
+
+# Fleet stacks & runtime state
+/fleet/
+/demo-fleet/
+/hub/fleet/
+start-kraken.bat
+*.pid
+*.started_at
 
 # Runtime folders (logs, state, diagnostics)
 /logs/

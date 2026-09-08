@@ -14,13 +14,27 @@
 import { spawn } from 'child_process';
 import { readFile } from 'fs/promises';
 import { existsSync } from 'fs';
-import { resolve } from 'path';
+import { resolve, join } from 'path';
 
-// Where the hub's checkout lives on disk. The user runs `bun run start` from
-// the hub directory, so process.cwd() is the right default. Override with
-// KRAKEN_HUB_DIR if you're starting it from somewhere else (eg systemd).
-const HUB_DIR = resolve(process.env.KRAKEN_HUB_DIR || process.cwd());
-const REPO_DIR = resolve(HUB_DIR, '..');
+// Resolve HUB_DIR and REPO_DIR reliably regardless of whether bun was launched
+// from the repo root or inside hub/. Override with KRAKEN_HUB_DIR if provided.
+function resolve_paths() {
+	if (process.env.KRAKEN_HUB_DIR) {
+		const hub = resolve(process.env.KRAKEN_HUB_DIR);
+		const repo = existsSync(join(hub, '..', '.git')) ? resolve(hub, '..') : hub;
+		return { hub, repo };
+	}
+	const cwd = resolve(process.cwd());
+	if (existsSync(join(cwd, '.git')) && existsSync(join(cwd, 'hub'))) {
+		return { hub: join(cwd, 'hub'), repo: cwd };
+	}
+	if (existsSync(join(cwd, '..', '.git'))) {
+		return { hub: cwd, repo: resolve(cwd, '..') };
+	}
+	return { hub: cwd, repo: resolve(cwd, '..') };
+}
+
+const { hub: HUB_DIR, repo: REPO_DIR } = resolve_paths();
 
 // Track whatever branch the working copy is checked out to, unless overridden.
 // Resolved lazily on first use so we read it from the actual repo.
@@ -94,7 +108,8 @@ export async function get_status() {
 	}
 
 	// Resolve the branch to track: explicit override, else whatever HEAD is on.
-	const branch = BRANCH_OVERRIDE || await git_line(['rev-parse', '--abbrev-ref', 'HEAD']) || 'main';
+	let branch = BRANCH_OVERRIDE || await git_line(['rev-parse', '--abbrev-ref', 'HEAD']) || 'main';
+	if (branch === 'HEAD') branch = 'main';
 	// Refresh remote refs so ahead/behind is real.
 	await git(['fetch', REMOTE, branch], { timeout: 30_000 });
 	const current_sha = await git_line(['rev-parse', 'HEAD']);

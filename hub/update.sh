@@ -20,7 +20,7 @@ cmd="${1:-update}"
 case "$cmd" in
   update)
     cd "$REPO"
-    git pull --ff-only
+    git pull --ff-only || git pull origin main || true
     cd "$HERE"
     bun install
     bun run build
