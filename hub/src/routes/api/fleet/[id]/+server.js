@@ -5,6 +5,7 @@ import {
 	ship_compose_action,
 	refit_ship,
 	backup_ship,
+	restore_ship_backup,
 	update_ship_env,
 	scuttle_ship,
 } from '$lib/server/fleet.js';
@@ -39,6 +40,14 @@ export async function POST({ params, request }) {
 
 		if (action === 'backup') {
 			const result = await backup_ship(params.id);
+			return json(result, { status: result.ok ? 200 : 500 });
+		}
+
+		if (action === 'restore') {
+			if (!body.filename) {
+				return json({ ok: false, error: 'filename required for restore' }, { status: 400 });
+			}
+			const result = await restore_ship_backup(params.id, body.filename);
 			return json(result, { status: result.ok ? 200 : 500 });
 		}
 

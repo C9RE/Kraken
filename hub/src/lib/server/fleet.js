@@ -462,6 +462,57 @@ export async function list_ship_backups(id) {
 	return out;
 }
 
+/**
+ * Restore a backup archive into the ship's data directory.
+ * @param {string} id
+ * @param {string} filename
+ */
+export async function restore_ship_backup(id, filename) {
+	const ship = await get_ship(id);
+	if (!ship) throw new Error(`no such ship: ${id}`);
+	if (!filename || typeof filename !== 'string') throw new Error('invalid backup filename');
+
+	const clean_name = basename(filename);
+	if (clean_name !== filename || (!filename.endsWith('.tar.gz') && !filename.endsWith('.tgz'))) {
+		throw new Error('invalid backup file format');
+	}
+
+	const archive = join(ship.path, 'backups', clean_name);
+	if (!existsSync(archive)) {
+		throw new Error(`backup archive not found: ${clean_name}`);
+	}
+
+	if (IS_DEMO) {
+		await new Promise(r => setTimeout(r, 400));
+		return { ok: true, name: clean_name };
+	}
+
+	const state = await container_state(ship.container, ship.path);
+	const was_running = state.status === 'running';
+	if (was_running) {
+		await ship_compose_action(id, 'stop');
+	}
+
+	const tar_bin = IS_WINDOWS ? 'tar.exe' : 'tar';
+	const result = await new Promise(resolve => {
+		const proc = spawn(tar_bin, ['-xzf', archive], { cwd: ship.path });
+		let buf = '';
+		proc.stderr.on('data', d => buf += d.toString());
+		proc.on('close', code => resolve({ ok: code === 0, output: buf.trim() }));
+		setTimeout(() => proc.kill(), 180_000);
+	});
+
+	if (was_running) {
+		await ship_compose_action(id, 'start');
+	}
+
+	if (!result.ok) {
+		return { ok: false, error: result.output || 'tar extract failed' };
+	}
+
+	return { ok: true, name: clean_name };
+}
+
 /** @param {string} id @param {{ purge?: boolean }} opts */
 export async function scuttle_ship(id, opts = {}) {
 	const ships = await read_index();

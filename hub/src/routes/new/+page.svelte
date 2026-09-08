@@ -1,6 +1,10 @@
 <script>
 	import { goto } from '$app/navigation';
 
+	/** @type {any[]} */
+	let existing_ships = $state([]);
+	let port_touched = $state(false);
+
 	let form = $state({
 		id: '',
 		name: '',
@@ -17,6 +21,29 @@
 	let saving = $state(false);
 	let error = $state('');
 
+	async function load_fleet() {
+		try {
+			const r = await fetch('/api/fleet');
+			if (!r.ok) return;
+			const data = await r.json();
+			existing_ships = data.ships || [];
+			if (!port_touched && existing_ships.length > 0) {
+				// Find next free port starting from 7777 in steps of 10
+				const used = new Set(existing_ships.map(s => s.port));
+				let candidate = 7777;
+				while (used.has(candidate)) {
+					candidate += 10;
+				}
+				form.port = candidate;
+				form.queryport = candidate + 1;
+			}
+		} catch {}
+	}
+
+	$effect(() => {
+		load_fleet();
+	});
+
 	// Auto-derive id from name when user hasn't typed one yet
 	let touched_id = $state(false);
 	function on_name_input(e) {
@@ -32,6 +59,11 @@
 	function set_players(n) {
 		form.max_players = n;
 	}
+
+	let colliding_ship = $derived.by(() => {
+		const p = Number(form.port);
+		return existing_ships.find(s => s.port === p || s.port + 1 === p);
+	});
 
 	async function submit(e) {
 		e.preventDefault();
@@ -130,12 +162,32 @@
 
 				<div class="row-2">
 					<label class="field">
-						<span class="field-label">Game Port (UDP)</span>
-						<input class="mono" type="number" bind:value={form.port} required />
+						<div class="field-label-row">
+							<span class="field-label">Game Port (UDP)</span>
+							{#if colliding_ship}
+								<span class="port-warn mono">⚠️ In use ({colliding_ship.server_name || colliding_ship.name})</span>
+							{/if}
+						</div>
+						<input
+							class="mono"
+							type="number"
+							bind:value={form.port}
+							oninput={() => {
+								port_touched = true;
+								form.queryport = Number(form.port) + 1;
+							}}
+							required
+						/>
 					</label>
 					<label class="field">
 						<span class="field-label">Query Port (UDP)</span>
-						<input class="mono" type="number" bind:value={form.queryport} required />
+						<input
+							class="mono"
+							type="number"
+							bind:value={form.queryport}
+							oninput={() => port_touched = true}
+							required
+						/>
 					</label>
 				</div>
 			</div>
@@ -323,6 +375,14 @@
 		justify-content: space-between;
 		align-items: center;
 		margin-bottom: 2px;
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+	.port-warn {
+		font-size: 10px;
+		font-weight: 600;
+		color: var(--color-rust);
+		letter-spacing: 0.02em;
 	}
 	.preset-caps {
 		display: flex;

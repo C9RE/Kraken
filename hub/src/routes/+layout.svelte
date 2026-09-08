@@ -32,7 +32,7 @@
 			<span class="sep">·</span>
 			<a href="https://thekraken.cloud" target="_blank" rel="noopener">thekraken.cloud</a>
 			<span class="sep">·</span>
-			<a href="https://github.com/C9RE/Kraken" target="_blank" rel="noopener">GitHub (v1.6.4)</a>
+			<a href="https://github.com/C9RE/Kraken" target="_blank" rel="noopener">GitHub (v1.7.0)</a>
 			<span class="sep">·</span>
 			<a href="https://c9re.com" target="_blank" rel="noopener">C9RE</a>
 		</footer>

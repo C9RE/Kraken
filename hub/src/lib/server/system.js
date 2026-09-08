@@ -122,8 +122,15 @@ export async function get_status() {
 		: [];
 	const dirty = dirty_files.length > 0;
 
+	let version = 'v1.7.0';
+	try {
+		const tag = await git_line(['describe', '--tags', '--abbrev=0']);
+		if (tag) version = tag;
+	} catch {}
+
 	return {
 		ok: true,
+		version,
 		repo_dir: REPO_DIR, hub_dir: HUB_DIR,
 		branch, remote: REMOTE, remote_url,
 		current_sha, current_short, current_subject, current_date,

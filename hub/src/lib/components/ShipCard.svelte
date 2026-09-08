@@ -2,6 +2,16 @@
 	let { ship, onaction } = $props();
 	let busy = $state(false);
 	let busy_action = $state(/** @type {string | null} */ (null));
+	let copied = $state(false);
+
+	async function copy_invite() {
+		if (!ship.invite_code) return;
+		try {
+			await navigator.clipboard.writeText(ship.invite_code);
+			copied = true;
+			setTimeout(() => copied = false, 2000);
+		} catch {}
+	}
 
 	/** @param {string} action */
 	async function act(action) {
@@ -46,7 +56,25 @@
 		<div><dt>image</dt><dd class="mono">{ship.image_tag || '-'}</dd></div>
 		<div><dt>port</dt><dd class="mono">:{ship.port}</dd></div>
 		<div><dt>cap</dt><dd class="mono">{ship.max_players}</dd></div>
-		<div><dt>invite</dt><dd class="mono">{ship.invite_code || '-'}</dd></div>
+		<div>
+			<dt>invite</dt>
+			<dd class="mono">
+				{#if ship.invite_code}
+					<button
+						type="button"
+						class="invite-copy-btn mono"
+						class:copied
+						onclick={copy_invite}
+						title="Copy invite code to clipboard"
+					>
+						<span class="invite-val">{copied ? 'copied! ⚓' : ship.invite_code}</span>
+						<span class="copy-glyph" aria-hidden="true">{copied ? '✔' : '📋'}</span>
+					</button>
+				{:else}
+					<span>-</span>
+				{/if}
+			</dd>
+		</div>
 	</dl>
 
 	<footer class="actions">
@@ -165,6 +193,43 @@
 	.meta div { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 	dt { font-size: 10px; color: var(--color-ink-4); letter-spacing: 0.16em; text-transform: uppercase; margin: 0; }
 	dd { color: var(--color-ink-2); margin: 0; font-size: 12px; }
+
+	.invite-copy-btn {
+		appearance: none;
+		background: rgba(204, 185, 157, 0.08);
+		border: 1px solid var(--color-border);
+		color: var(--color-accent-bright);
+		padding: 2px 6px;
+		border-radius: 4px;
+		font-size: 11px;
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		cursor: pointer;
+		transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+		max-width: 130px;
+	}
+	.invite-copy-btn .invite-val {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.invite-copy-btn .copy-glyph {
+		font-size: 10px;
+		opacity: 0.7;
+	}
+	.invite-copy-btn:hover {
+		background: var(--color-accent-soft);
+		border-color: var(--color-accent);
+		color: #ffffff;
+		transform: translateY(-1px);
+	}
+	.invite-copy-btn:active { transform: scale(0.96); }
+	.invite-copy-btn.copied {
+		background: rgba(104, 186, 140, 0.2);
+		border-color: var(--color-sage);
+		color: #ffffff;
+	}
 
 	/* ─── Actions footer ──────────────────────────────────────── */
 	.actions {

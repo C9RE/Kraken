@@ -16,6 +16,41 @@
 
 	let logs = $state('');
 	let logs_lines = $state(200);
+	let log_filter = $state('');
+	let auto_scroll = $state(true);
+	let copied_invite = $state(false);
+	let copied_logs = $state(false);
+	/** @type {HTMLElement | null} */
+	let logs_elem = $state(null);
+
+	let filtered_logs = $derived.by(() => {
+		if (!log_filter.trim()) return logs;
+		const q = log_filter.toLowerCase();
+		return logs
+			.split('\n')
+			.filter(line => line.toLowerCase().includes(q))
+			.join('\n');
+	});
+
+	async function copy_invite() {
+		const code = ship?.env?.INVITE_CODE || ship?.invite_code;
+		if (!code) return;
+		try {
+			await navigator.clipboard.writeText(code);
+			copied_invite = true;
+			setTimeout(() => copied_invite = false, 2000);
+		} catch {}
+	}
+
+	async function copy_logs() {
+		const text = filtered_logs || logs;
+		if (!text) return;
+		try {
+			await navigator.clipboard.writeText(text);
+			copied_logs = true;
+			setTimeout(() => copied_logs = false, 2000);
+		} catch {}
+	}
 
 	// Editable .env state - separate from ship.env so we know what's dirty
 	let env_draft = $state(/** @type {Record<string,string>} */ ({}));
@@ -67,6 +102,11 @@
 			const r = await fetch(`/api/fleet/${id}/logs?lines=${logs_lines}`);
 			const data = await r.json();
 			logs = data.logs || '';
+			if (auto_scroll && logs_elem) {
+				setTimeout(() => {
+					if (logs_elem) logs_elem.scrollTop = logs_elem.scrollHeight;
+				}, 50);
+			}
 		} catch {}
 	}
 
@@ -95,6 +135,12 @@
 		} finally {
 			busy = '';
 		}
+	}
+
+	async function restore_backup(filename) {
+		const ok = confirm(`Restore backup "${filename}"?\n\nThis will extract saved world files over the current data directory and reload.\n\nMake sure to snapshot current state first if you want to keep it.`);
+		if (!ok) return;
+		await act('restore', { filename });
 	}
 
 	let dirty = $derived.by(() => {
@@ -191,6 +237,20 @@
 				<span class="id-pill">id: {ship.id}</span>
 				<span class="sep">·</span>
 				<span class="port-pill">port: {ship.env.PORT || ship.port}</span>
+				{#if ship.env.INVITE_CODE || ship.invite_code}
+					<span class="sep">·</span>
+					<button
+						type="button"
+						class="invite-head-btn mono"
+						class:copied={copied_invite}
+						onclick={copy_invite}
+						title="Click to copy invite code"
+					>
+						<span class="invite-k">invite:</span>
+						<span class="invite-v">{copied_invite ? 'copied! ⚓' : (ship.env.INVITE_CODE || ship.invite_code)}</span>
+						<span class="invite-icon" aria-hidden="true">{copied_invite ? '✔' : '📋'}</span>
+					</button>
+				{/if}
 				<span class="sep">·</span>
 				<span class="ver-pill">{ship.env.IMAGE_TAG || ship.image_tag || 'v1.6.4'}</span>
 			</div>
@@ -299,15 +359,39 @@
 				</div>
 				{#if backups.length}
 					<ul class="bk-list mono">
-						{#each backups.slice(0, 8) as b}
+						{#each backups.slice(0, 10) as b}
 							<li>
-								<span class="bk-name" title={b.name}>{b.name}</span>
-								<span class="bk-size">{fmt_size(b.size)}</span>
-								<span class="bk-time">{fmt_date(b.mtime)}</span>
+								<div class="bk-info">
+									<span class="bk-name" title={b.name}>{b.name}</span>
+									<div class="bk-meta">
+										<span class="bk-size">{fmt_size(b.size)}</span>
+										<span class="sep">·</span>
+										<span class="bk-time">{fmt_date(b.mtime)}</span>
+									</div>
+								</div>
+								<div class="bk-actions">
+									<a
+										href={`/api/fleet/${id}/backups/${encodeURIComponent(b.name)}`}
+										class="btn-bk"
+										download={b.name}
+										title="Download backup archive (.tar.gz)"
+									>
+										<span>⬇ Download</span>
+									</a>
+									<button
+										type="button"
+										class="btn-bk btn-bk-restore"
+										disabled={!!busy}
+										onclick={() => restore_backup(b.name)}
+										title="Restore save from this snapshot"
+									>
+										<span>↺ Restore</span>
+									</button>
+								</div>
 							</li>
 						{/each}
 					</ul>
-					{#if backups.length > 8}<p class="ink-4 mono small">+{backups.length - 8} older archives stored</p>{/if}
+					{#if backups.length > 10}<p class="ink-4 mono small">+{backups.length - 10} older archives stored</p>{/if}
 				{:else}
 					<p class="ink-4 empty-note">No save snapshots recorded yet.</p>
 				{/if}
@@ -320,11 +404,36 @@
 						<p>Real-time stdout/stderr from <code>docker logs {ship.container}</code></p>
 					</div>
 					<div class="log-controls mono">
-						<span>tail lines:</span>
-						<input type="number" bind:value={logs_lines} min="50" max="2000" step="50" class="inline-num" />
+						<div class="log-search-box">
+							<input
+								type="text"
+								bind:value={log_filter}
+								placeholder="Filter logs..."
+								class="log-filter-input"
+							/>
+							{#if log_filter}
+								<button type="button" class="log-clear-btn" onclick={() => log_filter = ''} title="Clear filter">✕</button>
+							{/if}
+						</div>
+						<label class="autoscroll-toggle" title="Auto-scroll log output to bottom">
+							<input type="checkbox" bind:checked={auto_scroll} />
+							<span>auto-scroll</span>
+						</label>
+						<button
+							type="button"
+							class="btn btn-ghost btn-sm-log"
+							onclick={copy_logs}
+							title="Copy log text to clipboard"
+						>
+							{copied_logs ? 'Copied! ✔' : 'Copy Logs'}
+						</button>
+						<div class="tail-box">
+							<span>tail:</span>
+							<input type="number" bind:value={logs_lines} min="50" max="2000" step="50" class="inline-num" />
+						</div>
 					</div>
 				</header>
-				<pre class="logs mono">{logs || '(no logs captured yet — cast off vessel to start container)'}</pre>
+				<pre bind:this={logs_elem} class="logs mono">{filtered_logs || (log_filter ? `(no logs matching "${log_filter}")` : '(no logs captured yet — cast off vessel to start container)')}</pre>
 			</article>
 		</div>
 	</section>
@@ -386,6 +495,35 @@
 	}
 	.status-pills .sep { opacity: 0.3; }
 
+	.invite-head-btn {
+		appearance: none;
+		background: rgba(204, 185, 157, 0.12);
+		border: 1px solid var(--color-border-strong);
+		color: var(--color-accent-bright);
+		padding: 3px 8px;
+		border-radius: 4px;
+		font-size: 11.5px;
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		cursor: pointer;
+		transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+	}
+	.invite-head-btn .invite-k { color: var(--color-ink-3); text-transform: uppercase; font-size: 10px; }
+	.invite-head-btn .invite-v { color: #ffffff; font-weight: 600; }
+	.invite-head-btn .invite-icon { font-size: 10px; opacity: 0.8; }
+	.invite-head-btn:hover {
+		background: var(--color-accent-soft);
+		border-color: var(--color-accent);
+		transform: translateY(-1px);
+	}
+	.invite-head-btn:active { transform: scale(0.96); }
+	.invite-head-btn.copied {
+		background: rgba(104, 186, 140, 0.25);
+		border-color: var(--color-sage);
+		color: #ffffff;
+	}
+
 	.bridge-actions { display: flex; gap: 10px; align-items: center; }
 	.btn-cast { height: 38px; padding: 0 20px; }
 
@@ -414,22 +552,109 @@
 	.ink-4 { color: var(--color-ink-4); }
 
 	.cargo-top { padding-bottom: 12px; border-bottom: 1px solid var(--color-border); }
-	.bk-list { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-direction: column; gap: 6px; font-size: 12px; }
-	.bk-list li { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; padding: 8px 10px; background: rgba(0,0,0,0.25); border-radius: 4px; border: 1px solid var(--color-border); }
-	.bk-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-accent-bright); }
-	.bk-size { color: var(--color-ink-2); }
-	.bk-time { color: var(--color-ink-3); font-size: 11px; }
+	.bk-list { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-direction: column; gap: 8px; font-size: 12px; }
+	.bk-list li {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 12px;
+		padding: 10px 12px;
+		background: rgba(0,0,0,0.3);
+		border-radius: 6px;
+		border: 1px solid var(--color-border);
+		flex-wrap: wrap;
+	}
+	.bk-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+	.bk-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-accent-bright); font-weight: 500; font-size: 12.5px; }
+	.bk-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--color-ink-3); }
+	.bk-meta .sep { opacity: 0.3; }
+	.bk-meta .bk-size { color: var(--color-ink-2); }
+	.bk-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+	.btn-bk {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 4px 10px;
+		background: rgba(204, 185, 157, 0.1);
+		border: 1px solid var(--color-border-strong);
+		border-radius: 4px;
+		font-size: 11px;
+		font-weight: 600;
+		color: var(--color-accent-bright);
+		text-decoration: none;
+		cursor: pointer;
+		transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+	}
+	.btn-bk:hover:not(:disabled) {
+		background: var(--color-accent);
+		border-color: var(--color-accent-bright);
+		color: #080a0d;
+		transform: translateY(-1px);
+	}
+	.btn-bk:active:not(:disabled) { transform: scale(0.96); }
+	.btn-bk-restore:hover:not(:disabled) {
+		background: rgba(192, 112, 74, 0.3);
+		border-color: var(--color-rust);
+		color: #ffffff;
+	}
 
 	.log-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
-	.log-controls { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--color-ink-3); }
-	.inline-num { display: inline-block; width: 72px; padding: 4px 8px; font-size: 12px; }
+	.log-controls { display: flex; align-items: center; gap: 10px; font-size: 11.5px; color: var(--color-ink-3); flex-wrap: wrap; }
+	.log-search-box { position: relative; display: inline-flex; align-items: center; }
+	.log-filter-input {
+		width: 140px;
+		padding: 4px 22px 4px 8px;
+		font-size: 11px;
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border-strong);
+		border-radius: 4px;
+		color: var(--color-ink);
+		transition: width 0.2s, border-color 0.15s;
+	}
+	.log-filter-input:focus {
+		width: 190px;
+		border-color: var(--color-accent);
+	}
+	.log-clear-btn {
+		position: absolute;
+		right: 4px;
+		background: transparent;
+		border: none;
+		color: var(--color-ink-3);
+		font-size: 10px;
+		cursor: pointer;
+		padding: 2px 4px;
+	}
+	.log-clear-btn:hover { color: #ffffff; }
+
+	.autoscroll-toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		cursor: pointer;
+		user-select: none;
+		font-size: 11px;
+		color: var(--color-ink-3);
+	}
+	.autoscroll-toggle input { cursor: pointer; accent-color: var(--color-accent); }
+	.autoscroll-toggle:hover { color: var(--color-accent-bright); }
+
+	.btn-sm-log {
+		height: 26px;
+		padding: 0 8px;
+		font-size: 10.5px;
+		border-radius: 4px;
+	}
+
+	.tail-box { display: inline-flex; align-items: center; gap: 6px; }
+	.inline-num { display: inline-block; width: 62px; padding: 3px 6px; font-size: 11px; border-radius: 4px; }
 
 	.logs {
-		background: rgba(5, 7, 9, 0.85);
+		background: rgba(5, 7, 9, 0.9);
 		border: 1px solid var(--color-border);
 		padding: 14px 16px;
 		border-radius: 6px;
-		max-height: 420px;
+		max-height: 440px;
 		overflow: auto;
 		font-size: 11.5px;
 		line-height: 1.55;

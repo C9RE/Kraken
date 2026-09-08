@@ -3,10 +3,11 @@
 > **The self-hosted control plane and Docker fleet manager for [Windrose](https://store.steampowered.com/app/3041230/Windrose/) dedicated servers.**  
 > Live at [**thekraken.cloud**](https://thekraken.cloud/) · Interactive Demo at [**demo.thekraken.cloud**](https://demo.thekraken.cloud/) · Steam AppID **`4129620`**
 
-[![Windrose Version](https://img.shields.io/badge/Windrose-v1.6.4-ccb99d?style=flat-square)](https://store.steampowered.com/app/3041230/Windrose/)
+[![Windrose Version](https://img.shields.io/badge/Windrose-v1.7.0-ccb99d?style=flat-square)](https://store.steampowered.com/app/3041230/Windrose/)
 [![Steam AppID](https://img.shields.io/badge/SteamCMD-AppID%204129620-1b2e35?style=flat-square)](https://store.steampowered.com/app/3041230/Windrose/)
 [![Stack](https://img.shields.io/badge/Stack-Svelte%205%20%2B%20Bun-2a4a52?style=flat-square)](https://bun.sh)
 [![License](https://img.shields.io/badge/License-MIT-9a7f3e?style=flat-square)](LICENSE)
+[![Changelog](https://img.shields.io/badge/Changelog-v1.7.0-4ea8a1?style=flat-square)](CHANGELOG.md)
 
 ```text
                   _  __ _____            _  __ ______ _   _ 
@@ -23,7 +24,7 @@
 
 Kraken gives you a unified browser dashboard to spin up, orchestrate, mod, and configure multiple isolated Windrose dedicated servers without opening an SSH terminal.
 
-Forked from [`UberDudePL/windrose-dedicated-server-docker`](https://github.com/UberDudePL/windrose-dedicated-server-docker). The fleet manager lives in `hub/` and the marketing site lives in `site/` (hosted at [thekraken.cloud](https://thekraken.cloud)).
+Forked from [`UberDudePL/windrose-dedicated-server-docker`](https://github.com/UberDudePL/windrose-dedicated-server-docker). The fleet manager lives in `hub/` and the marketing site lives in `site/` (hosted at [thekraken.cloud](https://thekraken.cloud)). See full release history in [**CHANGELOG.md**](CHANGELOG.md).
 
 ---
 
@@ -49,14 +50,14 @@ Or clone and run the installer locally:
 
 Each dedicated server ("ship") is an isolated `docker-compose` stack with its own configuration, port allocation, save files, and Wine runtime.
 
-- **🚢 Fleet Harbor (`/`)** — Real-time overview of all commissioned vessels. View live container status, uptime, health checks, headcount, UDP port bindings, and invite codes. 1-click start (`Cast off`), stop, restart, or board the bridge.
-- **🏗️ Drydock (`/new`)** — Commission a new dedicated server in seconds. Auto-generates container slugs on the fly, allocates collision-free UDP ports (`7777`, `7787`, `7797`), offers crew capacity preset chips (`2p`, `4p`, `8p`, `12p`, `16p`), connection region selection (`EU`, `SEA`, `CIS`), and live spec summaries.
+- **🚢 Fleet Harbor (`/`)** — Real-time overview of all commissioned vessels. View live container status, uptime, health checks, headcount, UDP port bindings, and 1-click clipboard invite codes. 1-click start (`Cast off`), stop, restart, or board the bridge.
+- **🏗️ Drydock (`/new`)** — Commission a new dedicated server in seconds. Auto-generates container slugs on the fly, scans existing vessels to automatically allocate collision-free UDP ports (`7777`, `7787`, `7797`), offers crew capacity preset chips (`2p`, `4p`, `8p`, `12p`, `16p`), connection region selection (`EU`, `SEA`, `CIS`), and live spec summaries.
 - **🧭 Bridge & Manifest (`/ship/:id`)** — Edit environment variables (`SERVER_NAME`, `SERVER_NOTE`, `INVITE_CODE`, `MAX_PLAYERS`, `PORT`, `QUERYPORT`, `IMAGE_TAG`, `USE_DIRECT_CONNECTION`, `USER_SELECTED_REGION`, `DISCORD_WEBHOOK_URL`, `GOTIFY_URL`) directly from the browser with change-tracking and safe persistence.
 - **🏴‍☠️ Rigging Mod Manager (`/ship/:id` → Rigging)** — Drag-and-drop mod uploader supporting UE4SS zip bundles, loose `.lua` scripts, native `.dll` mods, and Unreal `.pak`/`.ucas`/`.utoc` files. Maintains dual synchronization across `mods.json` (authoritative) and `mods.txt` (CRLF legacy mirror with pinned `Keybinds : 1` anchor), creates DLL `enabled.txt` sentinels, and auto-detects **WindrosePlus**.
 - **🗺️ Voyage Difficulty Studio (`/ship/:id` → Voyage)** — Visual tuning aligned with the official Windrose Dedicated Server Guide. Presets (`Easy`, `Medium`, `Hard`, `Custom`) and exact upstream parameter multipliers (Mob HP `0.2–5.0`, Mob Damage `0.2–5.0`, Ship HP `0.4–5.0`, Ship Damage `0.2–2.5`, Boarding `0.2–5.0`, Co-op enemy & ship scaling `0.0–2.0`, Shared Quests, and Immersive Exploration) written safely to `WorldDescription.json`. Gated while servers are running to prevent RocksDB flush overwrites.
-- **📦 Cargo Hold Backups (`/ship/:id` → Cargo Hold)** — Hot-tar world save profiles (`data/R5/Saved`) and server configurations into timestamped `.tar.gz` archives with instant 1-click download or restore.
-- **📜 Log Book (`/ship/:id` → Log Book)** — Tail live container logs and Wine execution output directly in the browser with configurable tail length. Zero SSH required.
-- **⚙️ Settings & 1-Click Updates (`/settings`)** — Built-in Git version tracker showing current commit, remote commit, and a 1-click self-updater that pulls, builds, and seamlessly restarts the service.
+- **📦 Cargo Hold Backups (`/ship/:id` → Cargo Hold)** — Hot-tar world save profiles (`data/R5/Saved`) and server configurations into timestamped `.tar.gz` archives with instant **1-click browser download** and **1-click safe snapshot restore**.
+- **📜 Log Book (`/ship/:id` → Log Book)** — Tail live container logs and Wine execution output directly in the browser with real-time text search filter, auto-scroll toggle, 1-click copy logs, and configurable tail length. Zero SSH required.
+- **⚙️ Settings & 1-Click Updates (`/settings`)** — Built-in Git version tracker showing current commit, remote commit, active version tag, and a 1-click self-updater that pulls, builds, and seamlessly restarts the service.
 - **🔐 Security PIN Gate (`/login`)** — Scrypt-hashed 4–12 digit PIN access with per-IP exponential brute-force rate limiting (5 failed attempts locks for 15 minutes) and signed session cookies.
 - **🎮 Interactive Demo Sandbox** — Fully functional mirror sandbox at [**demo.thekraken.cloud**](https://demo.thekraken.cloud) where anyone can explore the complete management UI.
 
