@@ -667,27 +667,70 @@ export async function seed_demo_fleet() {
 		};
 		await write_env(join(ship_path, '.env'), env);
 
-		// Saved Game + WorldDescription.json
-		const world_dir = join(ship_path, 'data', 'R5', 'Saved', 'SaveGames', 'World_01');
-		await mkdir(world_dir, { recursive: true });
-		const world_desc = {
-			WorldName: 'World_01',
-			DifficultyPreset: s.id === 'flying-dutchman' ? 'Hard' : 'Medium',
-			CombatDifficulty: s.id === 'flying-dutchman' ? 'Hard' : 'Normal',
-			Floats: {
-				DamageToPlayers: s.id === 'flying-dutchman' ? 1.5 : 1.0,
-				DamageFromPlayers: s.id === 'flying-dutchman' ? 0.8 : 1.0,
-				ExpMultiplier: 1.25,
-				MobHealthMultiplier: s.id === 'flying-dutchman' ? 1.5 : 1.0,
-				LootDropMultiplier: 1.2,
-				ShipSpeedMultiplier: 1.0,
-				DurabilityLossMultiplier: 0.85,
+		const island_id = s.id === 'black-pearl' ? 'DB57768A8A7746899683D0EEE91F97BF'
+			: s.id === 'queen-anne' ? '26C14DC8A78D4AF69E9C77527C934CF3'
+			: 'E24A22C9C8D3448951AFD002162576D5';
+
+		// ServerDescription.json in R5/
+		const r5_dir = join(ship_path, 'data', 'R5');
+		await mkdir(r5_dir, { recursive: true });
+		await writeFile(join(r5_dir, 'ServerDescription.json'), JSON.stringify({
+			Version: 1,
+			DeploymentId: '0.10.0.0.251-master-9f800c33',
+			ServerDescription_Persistent: {
+				PersistentServerId: '1B80182E460F727CEA080C8EEBB1EA0A',
+				InviteCode: s.invite_code,
+				IsPasswordProtected: false,
+				Password: '',
+				ServerName: s.name,
+				WorldIslandId: island_id,
+				MaxPlayerCount: s.max_players,
+				UserSelectedRegion: 'EU',
+				P2pProxyAddress: '127.0.0.1',
+				UseDirectConnection: true,
+				DirectConnectionServerAddress: '',
+				DirectConnectionServerPort: s.port,
+				DirectConnectionProxyAddress: '0.0.0.0',
+				AutoLoadLatestBackupIfHasBroken: true,
+				CanLaunchMultipleServerInstances: false,
 			},
-			Bools: {
-				EnablePvP: true,
-				KeepInventoryOnDeath: s.id !== 'flying-dutchman',
-				EasyExplore: false,
-				DynamicWeather: true,
+		}, null, 2));
+
+		// RocksDB_v2 Saved World + WorldDescription.json
+		const world_dir = join(ship_path, 'data', 'R5', 'Saved', 'SaveProfiles', 'Default', 'RocksDB_v2', '0.10.0', 'Worlds', island_id);
+		await mkdir(world_dir, { recursive: true });
+		const preset_type = s.id === 'flying-dutchman' ? 'Hard' : (s.id === 'queen-anne' ? 'Easy' : 'Medium');
+		const combat_type = s.id === 'flying-dutchman' ? 'Hard' : (s.id === 'queen-anne' ? 'Easy' : 'Normal');
+		const float_mult = s.id === 'flying-dutchman' ? 1.5 : (s.id === 'queen-anne' ? 0.7 : 1.0);
+		const dmg_mult = s.id === 'flying-dutchman' ? 1.25 : (s.id === 'queen-anne' ? 0.6 : 1.0);
+
+		const world_desc = {
+			Version: 1,
+			WorldDescription: {
+				IslandId: island_id,
+				WorldName: s.name,
+				CreationTime: 6.3910902400911002e+17,
+				WorldPresetType: preset_type,
+				WorldSettings: {
+					BoolParameters: {
+						'{"TagName": "WDS.Parameter.Coop.SharedQuests"}': true,
+						'{"TagName": "WDS.Parameter.EasyExplore"}': false,
+					},
+					FloatParameters: {
+						'{"TagName": "WDS.Parameter.MobHealthMultiplier"}': float_mult,
+						'{"TagName": "WDS.Parameter.MobDamageMultiplier"}': dmg_mult,
+						'{"TagName": "WDS.Parameter.ShipsHealthMultiplier"}': float_mult,
+						'{"TagName": "WDS.Parameter.ShipsDamageMultiplier"}': dmg_mult,
+						'{"TagName": "WDS.Parameter.BoardingDifficultyMultiplier"}': float_mult,
+						'{"TagName": "WDS.Parameter.Coop.StatsCorrectionModifier"}': 1.0,
+						'{"TagName": "WDS.Parameter.Coop.ShipStatsCorrectionModifier"}': 0.0,
+					},
+					TagParameters: {
+						'{"TagName": "WDS.Parameter.CombatDifficulty"}': {
+							TagName: `WDS.Parameter.CombatDifficulty.${combat_type}`,
+						},
+					},
+				},
 			},
 		};
 		await writeFile(join(world_dir, 'WorldDescription.json'), JSON.stringify(world_desc, null, 2));
@@ -699,18 +742,18 @@ export async function seed_demo_fleet() {
 			await mkdir(join(ue4ss_dir, m), { recursive: true });
 			await writeFile(join(ue4ss_dir, m, 'enabled.txt'), '');
 		}
-		await writeFile(join(ue4ss_dir, 'mods.json'), JSON.stringify({
-			BPML_GenericFunctions: true,
-			BPModLoaderMod: true,
-			CheatManagerEnablerMod: false,
-			ConsoleCommandsMod: true,
-			ConsoleEnablerMod: false,
-			Keybinds: true,
-			LineTraceMod: false,
-			WindrosePlus: true,
-			ShipCompassMod: true,
-			HighSeasLoot: true,
-		}, null, 2));
+		await writeFile(join(ue4ss_dir, 'mods.json'), JSON.stringify([
+			{ mod_name: 'BPML_GenericFunctions', mod_enabled: true },
+			{ mod_name: 'BPModLoaderMod', mod_enabled: true },
+			{ mod_name: 'CheatManagerEnablerMod', mod_enabled: false },
+			{ mod_name: 'ConsoleCommandsMod', mod_enabled: true },
+			{ mod_name: 'ConsoleEnablerMod', mod_enabled: false },
+			{ mod_name: 'Keybinds', mod_enabled: true },
+			{ mod_name: 'LineTraceMod', mod_enabled: false },
+			{ mod_name: 'WindrosePlus', mod_enabled: true },
+			{ mod_name: 'ShipCompassMod', mod_enabled: true },
+			{ mod_name: 'HighSeasLoot', mod_enabled: true },
+		], null, 2));
 		await writeFile(join(ue4ss_dir, 'mods.txt'), [
 			'; UE4SS Mods registry',
 			'BPML_GenericFunctions : 1',

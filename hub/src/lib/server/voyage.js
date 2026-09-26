@@ -170,7 +170,7 @@ async function read_world(path) {
 	const ws = wd.WorldSettings || {};
 	const flat = {
 		path,
-		island_id:   wd.islandId || '',
+		island_id:   wd.IslandId || wd.islandId || '',
 		world_name:  wd.WorldName || '',
 		preset:      wd.WorldPresetType || 'Custom',
 		combat:      tag_value_to_combat(find_tag_value(ws.TagParameters, 'WDS.Parameter.CombatDifficulty')),

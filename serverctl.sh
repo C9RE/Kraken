@@ -22,7 +22,14 @@ DOCKER_BIN="${DOCKER_BIN:-}"
 SELF_NAME="${WINDROSE_CMD_NAME:-$(basename "$0")}"
 SERVER_DESC_FILE="$SCRIPT_DIR/data/R5/ServerDescription.json"
 APP_MANIFEST_FILE="$SCRIPT_DIR/data/steamapps/appmanifest_4129620.acf"
-ROCKSDB_DIR="$SCRIPT_DIR/data/R5/Saved/SaveProfiles/Default/RocksDB"
+resolve_rocksdb_dir() {
+  if [[ -d "$SCRIPT_DIR/data/R5/Saved/SaveProfiles/Default/RocksDB_v2" ]]; then
+    printf '%s' "$SCRIPT_DIR/data/R5/Saved/SaveProfiles/Default/RocksDB_v2"
+  else
+    printf '%s' "$SCRIPT_DIR/data/R5/Saved/SaveProfiles/Default/RocksDB"
+  fi
+}
+ROCKSDB_DIR="$(resolve_rocksdb_dir)"
 WORLD_NAME_PENDING_FILE=".windrose-world-name"
 UPDATE_LOG_DIR="$SCRIPT_DIR/logs"
 UPDATE_LOG_FILE="$UPDATE_LOG_DIR/update.log"
@@ -391,6 +398,7 @@ require_jq() {
 }
 
 detect_world_version() {
+  ROCKSDB_DIR="$(resolve_rocksdb_dir)"
   if [[ ! -d "$ROCKSDB_DIR" ]]; then
     return 1
   fi
