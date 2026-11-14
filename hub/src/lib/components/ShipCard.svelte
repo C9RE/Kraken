@@ -3,6 +3,10 @@
 	let busy = $state(false);
 	let busy_action = $state(/** @type {string | null} */ (null));
 	let copied = $state(false);
+	let copied_direct = $state(false);
+
+	let direct_enabled = $derived(ship.use_direct_connection || ship.env?.USE_DIRECT_CONNECTION === 'true');
+	let direct_port = $derived(ship.direct_port || ship.env?.DIRECT_CONNECTION_SERVER_PORT || ship.port);
 
 	async function copy_invite() {
 		if (!ship.invite_code) return;
@@ -10,6 +14,15 @@
 			await navigator.clipboard.writeText(ship.invite_code);
 			copied = true;
 			setTimeout(() => copied = false, 2000);
+		} catch {}
+	}
+
+	async function copy_direct() {
+		const host = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1';
+		try {
+			await navigator.clipboard.writeText(`${host}:${direct_port}`);
+			copied_direct = true;
+			setTimeout(() => copied_direct = false, 2000);
 		} catch {}
 	}
 
@@ -54,7 +67,26 @@
 
 	<dl class="meta">
 		<div><dt>image</dt><dd class="mono">{ship.image_tag || '-'}</dd></div>
-		<div><dt>port</dt><dd class="mono">:{ship.port}</dd></div>
+		<div>
+			<dt>{direct_enabled ? 'direct' : 'port'}</dt>
+			<dd class="mono">
+				{#if direct_enabled}
+					<button
+						type="button"
+						class="invite-copy-btn mono"
+						class:copied={copied_direct}
+						onclick={copy_direct}
+						aria-label={`Copy direct connection port ${direct_port} to clipboard`}
+						title="Copy Direct IP:Port to clipboard"
+					>
+						<span class="invite-val">{copied_direct ? 'copied! ⚓' : `:${direct_port}`}</span>
+						<span class="copy-glyph" aria-hidden="true">{copied_direct ? '✔' : '📋'}</span>
+					</button>
+				{:else}
+					:{ship.port}
+				{/if}
+			</dd>
+		</div>
 		<div><dt>cap</dt><dd class="mono">{ship.max_players}</dd></div>
 		<div>
 			<dt>invite</dt>
@@ -65,6 +97,7 @@
 						class="invite-copy-btn mono"
 						class:copied
 						onclick={copy_invite}
+						aria-label={`Copy invite code ${ship.invite_code} to clipboard`}
 						title="Copy invite code to clipboard"
 					>
 						<span class="invite-val">{copied ? 'copied! ⚓' : ship.invite_code}</span>

@@ -129,9 +129,17 @@ TARGET_DIR="${KRAKEN_DIR:-$PWD}"
 if [[ -f "$TARGET_DIR/hub/package.json" && -f "$TARGET_DIR/docker-compose.yml" ]]; then
   log_ok "Using existing Kraken directory at $TARGET_DIR"
   cd "$TARGET_DIR"
+  if [[ -d .git ]]; then
+    log_info "Pulling latest Kraken updates from origin/main..."
+    git pull origin main || true
+  fi
 elif [[ -d "$TARGET_DIR/Kraken/hub" ]]; then
   log_ok "Found Kraken repo at $TARGET_DIR/Kraken"
   cd "$TARGET_DIR/Kraken"
+  if [[ -d .git ]]; then
+    log_info "Pulling latest Kraken updates from origin/main..."
+    git pull origin main || true
+  fi
 else
   CLONE_DIR="$HOME/kraken"
   if [[ -d "$CLONE_DIR" ]]; then

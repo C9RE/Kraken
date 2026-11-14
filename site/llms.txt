@@ -1,0 +1,24 @@
+# The Kraken — Windrose Dedicated Server Fleet Manager
+
+> Open-source, self-hosted control plane and fleet manager for Windrose dedicated servers (Steam AppID 4129620). Commission multi-server Docker and Native Windows stacks, drag-and-drop UE4SS & Unreal Engine .pak mods, tune RocksDB difficulty multipliers, and run live hot backups with zero SSH.
+
+- **Current Release**: v1.8.0 (Default Windrose Docker engine tag: v1.6.6)
+- **Maintainer**: C9RE (https://c9re.dev)
+- **License**: MIT
+
+## Highlights & Capabilities
+- **1-Click Zero-SSH Installers**: Linux Docker Engine (`curl -fsSL https://thekraken.cloud/install.sh | bash`) and Windows Native Win32 (`irm https://thekraken.cloud/install.ps1 | iex`).
+- **Dual Execution Engines**: Run containerized WineHQ 9.0 + Xvfb Docker Compose stacks on Linux (`WINEDLLOVERRIDES=dwmapi=n,b` enabled for UE4SS), or native bare-metal `WindroseServer-Win64-Shipping.exe` supervision on Windows with zero emulation overhead.
+- **Drydock Multi-Server Commissioning**: Automatic UDP port pair collision detection and offset allocation (`7777/7778`, `7787/7788`, etc.).
+- **Rigging Mod Manager**: Drag-and-drop installer for UE4SS `.zip`, `.lua`, native `.dll` (`enabled.txt` sentinels), and Unreal `.pak`/`.ucas`/`.utoc` files. Mirrors active state across both `mods.json` (authoritative) and CRLF `mods.txt` (with `Keybinds : 1` pinned last), while preserving custom `UE4SS-settings.ini` hooks for WindrosePlus.
+- **Voyage Difficulty Studio**: Presets and granular multipliers synced to `WorldDescription.json` with RocksDB lock protection while servers are running.
+- **Cargo Hold Backups**: Live hot-tar `.tar.gz` snapshots of `data/R5/Saved` and `ServerDescription.json` with 1-click browser downloads and atomic restores.
+
+## Canonical URLs & Documentation
+- [Official Website](https://thekraken.cloud/)
+- [Interactive Sandbox Demo](https://demo.thekraken.cloud/)
+- [Complete LLM Documentation](https://thekraken.cloud/llms-full.txt)
+- [GitHub Repository](https://github.com/C9RE/Kraken)
+- [Linux Installer Script](https://thekraken.cloud/install.sh)
+- [Windows PowerShell Installer Script](https://thekraken.cloud/install.ps1)
+- [Sitemap](https://thekraken.cloud/sitemap.xml)

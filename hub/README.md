@@ -148,10 +148,12 @@ UE4SS only reads `mods.json` / `mods.txt` at process start. The Rigging panel sh
 - [BisectHosting UE4SS-on-Windrose article](https://help.bisecthosting.com/hc/en-us/articles/49353795082523-How-to-Install-UE4SS-on-a-Windrose-Server).
 - [UE4SS upstream](https://github.com/UE4SS-RE/RE-UE4SS).
 
+- The native Windows engine mode supervises `data/R5/Binaries/Win64/WindroseServer-Win64-Shipping.exe` directly via PID file tracking and reads `data/R5/Saved/Logs/R5.log`.
+
 ## Roadmap
 
 - Scheduled backups + retention policy automation per ship.
-- Browse + restore from the backup tarball list.
+- Per-ship resource telemetry (CPU / RSS memory graph in Bridge).
 - One-click image-channel switch (`stable` / `dev`).
 - Multi-host Docker — point the hub at a remote `DOCKER_HOST=tcp://…` instead of the local socket.
 

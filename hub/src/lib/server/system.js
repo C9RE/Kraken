@@ -137,7 +137,7 @@ export async function get_status() {
 		: [];
 	const dirty = dirty_files.length > 0;
 
-	let version = 'v1.7.0';
+	let version = 'v1.8.0';
 	try {
 		const tag = await git_line(['describe', '--tags', '--abbrev=0']);
 		if (tag) version = tag;

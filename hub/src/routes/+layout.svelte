@@ -9,6 +9,18 @@
 
 <svelte:head>
 	<title>{is_demo ? 'Kraken Demo — Windrose Server Sandbox' : 'Kraken Hub — Windrose Fleet Manager'}</title>
+	<meta name="description" content="Self-hosted control plane for Windrose dedicated servers. Manage Docker and native Windows servers, UE4SS & Pak mods, difficulty tuning, and hot backups." />
+	<meta property="og:type" content="website" />
+	<meta property="og:site_name" content="The Kraken" />
+	<meta property="og:title" content={is_demo ? 'The Kraken Demo — Windrose Server Control Plane' : 'The Kraken Hub — Windrose Fleet Manager'} />
+	<meta property="og:description" content="Test drive The Kraken Windrose server manager: 1-click Drydock commissioning, UE4SS & Pak mod installer, RocksDB voyage tuning, and Cargo Hold backups." />
+	<meta property="og:image" content="https://thekraken.cloud/assets/og-card.png" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content={is_demo ? 'The Kraken Demo — Windrose Server Control Plane' : 'The Kraken Hub — Windrose Fleet Manager'} />
+	<meta name="twitter:description" content="Interactive Windrose dedicated server fleet manager built with Svelte 5 and Bun." />
+	<meta name="twitter:image" content="https://thekraken.cloud/assets/og-card.png" />
 </svelte:head>
 
 <div class="fixed-backdrop" aria-hidden="true"></div>
@@ -32,9 +44,9 @@
 			<span class="sep">·</span>
 			<a href="https://thekraken.cloud" target="_blank" rel="noopener">thekraken.cloud</a>
 			<span class="sep">·</span>
-			<a href="https://github.com/C9RE/Kraken" target="_blank" rel="noopener">GitHub (v1.7.0)</a>
+			<a href="https://github.com/C9RE/Kraken" target="_blank" rel="noopener">GitHub (v1.8.0)</a>
 			<span class="sep">·</span>
-			<a href="https://c9re.com" target="_blank" rel="noopener">C9RE</a>
+			<a href="https://c9re.dev" target="_blank" rel="noopener">C9RE</a>
 		</footer>
 	{/if}
 </div>

@@ -94,7 +94,7 @@ function compose(cwd, args, timeout_ms = 180_000) {
 				DEMO_STATE.set(container, { status: 'exited', health: '', started_at: 0 });
 				resolve({ ok: true, output: `[+] Stopping 1/1\n ✔ Container ${container}  Stopped` });
 			} else if (cmd === 'pull') {
-				resolve({ ok: true, output: 'Status: Image is up to date for ghcr.io/uberdudepl/windrose-dedicated-server-docker:v1.6.4' });
+				resolve({ ok: true, output: 'Status: Image is up to date for ghcr.io/uberdudepl/windrose-dedicated-server-docker:v1.6.6' });
 			} else if (cmd === 'down') {
 				DEMO_STATE.delete(container);
 				resolve({ ok: true, output: `[+] Removed container ${container}` });
@@ -213,6 +213,8 @@ export async function list_ships() {
 			port: parseInt(env.PORT || '7777'),
 			max_players: parseInt(env.MAX_PLAYERS || '8'),
 			server_name: env.SERVER_NAME || s.name,
+			use_direct_connection: env.USE_DIRECT_CONNECTION === 'true',
+			direct_port: parseInt(env.DIRECT_CONNECTION_SERVER_PORT || env.PORT || '7777'),
 			active: state.status === 'running',
 			health: state.health,
 			started_at: state.started_at,
@@ -292,12 +294,13 @@ export async function create_ship(input) {
 		CONTAINER_NAME: `windrose-${input.id}`,
 		HOSTNAME: input.hostname || 'localhost',
 		IMAGE_REPOSITORY: 'ghcr.io/uberdudepl/windrose-dedicated-server-docker',
-		IMAGE_TAG: input.image_tag || 'v1.6.4',
+		IMAGE_TAG: input.image_tag || 'v1.6.6',
 		PUID: '1000', PGID: '1000',
 		STEAM_LOGIN: 'anonymous', STEAM_PASS: '',
 		WINDROSE_APP_ID: '4129620',
 		UPDATE_ON_START: 'true',
 		GENERATE_SETTINGS: 'true',
+		WINEDLLOVERRIDES: 'dwmapi=n,b',
 		INVITE_CODE: input.invite_code || '',
 		SERVER_NAME: input.name,
 		SERVER_NOTE: input.server_note || '',
@@ -333,9 +336,13 @@ export async function ship_compose_action(id, action) {
 	if (!ship) throw new Error(`no such ship: ${id}`);
 
 	// Check if we should execute in native mode (Windows native platform or KRAKEN_ENGINE=native)
-	const win_exe = join(ship.path, 'data', 'R5', 'Binaries', 'Win64', 'R5Server-Win64-Shipping.exe');
-	const win_stub = join(ship.path, 'data', 'WindroseServer.exe');
-	const has_win_bin = existsSync(win_exe) || existsSync(win_stub);
+	const win_candidates = [
+		join(ship.path, 'data', 'R5', 'Binaries', 'Win64', 'WindroseServer-Win64-Shipping.exe'),
+		join(ship.path, 'data', 'R5', 'Binaries', 'Win64', 'R5Server-Win64-Shipping.exe'),
+		join(ship.path, 'data', 'WindroseServer.exe'),
+	];
+	const target_exe = win_candidates.find(p => existsSync(p));
+	const has_win_bin = Boolean(target_exe);
 
 	if (IS_WINDOWS || process.env.KRAKEN_ENGINE === 'native' || (!existsSync(join(ship.path, 'docker-compose.yml')) && has_win_bin)) {
 		const pid_file = join(ship.path, '.pid');
@@ -360,9 +367,8 @@ export async function ship_compose_action(id, action) {
 		}
 
 		if (action === 'start' || action === 'restart') {
-			const target_exe = existsSync(win_exe) ? win_exe : win_stub;
-			if (!existsSync(target_exe)) {
-				return { ok: false, output: `Windrose server binary not found at ${win_exe}. Run pull/update to download via SteamCMD.` };
+			if (!target_exe) {
+				return { ok: false, output: `Windrose server binary not found under ${join(ship.path, 'data')}. Run pull/update to download via SteamCMD.` };
 			}
 			const env = await read_env(join(ship.path, '.env'));
 			const port = env.PORT || '7777';
@@ -383,6 +389,7 @@ export async function ship_compose_action(id, action) {
 			const steamcmd_bin = IS_WINDOWS ? 'steamcmd.exe' : 'steamcmd';
 			return new Promise(resolve => {
 				const proc = spawn(steamcmd_bin, [
+					'+@sSteamCmdForcePlatformType', 'windows',
 					'+force_install_dir', join(ship.path, 'data'),
 					'+login', 'anonymous',
 					'+app_update', '4129620', 'validate',
@@ -547,7 +554,7 @@ export async function ship_logs(id, lines = 200) {
 		const max_players = ship.env?.MAX_PLAYERS || '8';
 		const invite_code = ship.env?.INVITE_CODE || '3f1f4cf6';
 		const server_name = ship.env?.SERVER_NAME || ship.name;
-		const image_tag = ship.env?.IMAGE_TAG || 'v1.6.4';
+		const image_tag = ship.env?.IMAGE_TAG || 'v1.6.6';
 		const logs = [
 			`${ts(3600)} [WineHQ] Initializing Wine 9.0 prefix in /home/steam/.wine`,
 			`${ts(3595)} [SteamCMD] Logging in user 'anonymous' to Steam Public...`,
@@ -642,19 +649,20 @@ export async function seed_demo_fleet() {
 		}
 
 		// Compose mock
-		await writeFile(join(ship_path, 'docker-compose.yml'), 'services:\n  windrose:\n    image: ghcr.io/uberdudepl/windrose-dedicated-server-docker:v1.6.4\n    restart: unless-stopped\n');
+		await writeFile(join(ship_path, 'docker-compose.yml'), 'services:\n  windrose:\n    image: ghcr.io/uberdudepl/windrose-dedicated-server-docker:v1.6.6\n    restart: unless-stopped\n');
 
 		// Env
 		const env = {
 			CONTAINER_NAME: `windrose-${s.id}`,
 			HOSTNAME: 'localhost',
 			IMAGE_REPOSITORY: 'ghcr.io/uberdudepl/windrose-dedicated-server-docker',
-			IMAGE_TAG: 'v1.6.4',
+			IMAGE_TAG: 'v1.6.6',
 			PUID: '1000', PGID: '1000',
 			STEAM_LOGIN: 'anonymous', STEAM_PASS: '',
 			WINDROSE_APP_ID: '4129620',
 			UPDATE_ON_START: 'true',
 			GENERATE_SETTINGS: 'true',
+			WINEDLLOVERRIDES: 'dwmapi=n,b',
 			INVITE_CODE: s.invite_code,
 			SERVER_NAME: s.name,
 			SERVER_NOTE: s.server_note,

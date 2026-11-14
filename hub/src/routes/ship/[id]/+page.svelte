@@ -252,7 +252,7 @@
 					</button>
 				{/if}
 				<span class="sep">·</span>
-				<span class="ver-pill">{ship.env.IMAGE_TAG || ship.image_tag || 'v1.6.4'}</span>
+				<span class="ver-pill">{ship.env.IMAGE_TAG || ship.image_tag || 'v1.6.6'}</span>
 			</div>
 		</div>
 		<div class="bridge-actions">

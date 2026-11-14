@@ -15,7 +15,7 @@
 		queryport: 7778,
 		server_password: '',
 		user_selected_region: '',
-		image_tag: 'v1.6.4',
+		image_tag: 'v1.6.6',
 		hostname: 'localhost',
 	});
 	let saving = $state(false);
@@ -224,7 +224,7 @@
 					<input
 						class="mono"
 						bind:value={form.image_tag}
-						placeholder="v1.6.4"
+						placeholder="v1.6.6"
 						required
 					/>
 				</label>

@@ -1,4 +1,0 @@
-services:
-  windrose:
-    image: ghcr.io/uberdudepl/windrose-dedicated-server-docker:v1.6.4
-    restart: unless-stopped

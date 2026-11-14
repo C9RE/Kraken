@@ -4,6 +4,24 @@ All notable changes to **Kraken** (the Windrose Dedicated Server Fleet Manager) 
 
 ---
 
+## [v1.8.0] — 2026-11-14
+
+### 🚀 Engine Sync, Native Fixes & Fleet UX
+* **🐳 Windrose Engine `v1.6.6` Upgrade:**
+  * Updated default upstream container tag from `v1.6.4` to **`v1.6.6`** across `docker-compose.yml`, `.env.example`, `fleet.js`, Drydock (`new/+page.svelte`), Bridge (`ship/[id]/+page.svelte`), and demo seeds.
+  * Restored `WINEDLLOVERRIDES: ${WINEDLLOVERRIDES:-dwmapi=n,b}` in `docker-compose.yml` and `.env.example` so headless Wine containers reliably load UE4SS `dwmapi.dll` hooks.
+* **🪟 Native Windows Supervision Fixes (`fleet.js`):**
+  * Fixed native Windows server executable resolution to target `data/R5/Binaries/Win64/WindroseServer-Win64-Shipping.exe` first (keeping `R5Server-Win64-Shipping.exe` and `WindroseServer.exe` as fallbacks).
+  * Added `+@sSteamCmdForcePlatformType windows` to native SteamCMD `pull` invocations for reliable Windows depot downloads across platforms.
+* **⚓ Harbor Fleet Dashboard UX (`+page.svelte`, `ShipCard.svelte`):**
+  * Added real-time vessel search/filter input and `All` / `Afloat` / `Moored` status filter pills when managing multiple ships.
+  * Added total active/max crew capacity pill in the Harbor header and dismissible action toast banners reporting start/stop/restart outcomes and errors.
+  * Added 1-click **Direct IP:Port** clipboard copy button on vessel cards when `USE_DIRECT_CONNECTION=true`.
+* **🌐 Web & GitHub SEO/GEO Overhaul:**
+  * Fixed broken `thekraken.cloud/demo` links in `llms.txt` and `sitemap.xml` to point to `https://demo.thekraken.cloud/`, added `llms-full.txt`, expanded `@graph` JSON-LD with `FAQPage` and full `SoftwareApplication` metadata, added interactive 4-tab UI previews and comparison matrix on `thekraken.cloud`, and updated footer links to `https://c9re.dev`.
+
+---
+
 ## [v1.7.0] — 2026-09-08
 
 ### 🚀 Highlights & New Features

@@ -1,0 +1,110 @@
+# The Kraken — Full Technical Reference (Windrose Dedicated Server Fleet Manager)
+
+URL: https://thekraken.cloud/
+Interactive Demo: https://demo.thekraken.cloud/
+Repository: https://github.com/C9RE/Kraken
+Steam AppID: 4129620 (Windrose Dedicated Server)
+Version: v1.8.0 (Default container image: ghcr.io/uberdudepl/windrose-dedicated-server-docker:v1.6.6)
+Stack: SvelteKit 2 + Svelte 5 + Tailwind CSS 4 + Bun
+
+---
+
+## 1. Architecture Overview
+
+The Kraken separates web orchestration ("Kraken Hub") from individual game server instances ("Ships"). Each vessel lives inside `$KRAKEN_FLEET_ROOT/<ship-id>/` with isolated world saves, SteamCMD depot files, UE4SS mods, logs, and backup archives:
+
+```
+$KRAKEN_FLEET_ROOT/
+├── fleet.json              # Registry of commissioned ships
+└── <ship-id>/
+    ├── docker-compose.yml  # Isolated Compose service (host networking)
+    ├── .env                # Per-vessel runtime & game configuration
+    ├── data/               # /data mount: Windrose binaries, R5/Saved, mods
+    ├── steam-home/         # Wine prefix & SteamCMD cache
+    └── backups/            # *.tar.gz hot snapshots
+```
+
+### Dual-Engine Execution
+1. **Linux (Docker Engine)**: Runs `ghcr.io/uberdudepl/windrose-dedicated-server-docker:v1.6.6` with `network_mode: host`, WineHQ 9.0, Xvfb (`DISPLAY=:99`), `+@sSteamCmdForcePlatformType windows`, and `WINEDLLOVERRIDES=dwmapi=n,b` so headless Wine loads UE4SS `dwmapi.dll` hooks automatically.
+2. **Windows (Native Win32)**: Downloads AppID `4129620` via native `steamcmd.exe` and spawns `WindroseServer-Win64-Shipping.exe` (falling back to `R5Server-Win64-Shipping.exe` or `WindroseServer.exe`) directly with 0% emulation overhead.
+
+---
+
+## 2. System Requirements
+
+- **CPU**: x86_64 with AVX / AVX2 instruction support (required by Windrose Unreal Engine 5 binaries).
+- **Networking**: Kernel IPv6 enabled (`ipv6.disable=1` must NOT be set) and UDP port forwarding if using Direct Connection; `network_mode: host` on Docker for P2P NAT punch-through.
+- **Runtime**: Bun >= 1.0 + Docker Engine with Compose v2+ (Linux), or PowerShell + SteamCMD (Windows Native).
+
+---
+
+## 3. Port Allocation & Networking
+
+Each commissioned ship requires a unique UDP Game Port (`PORT`) and Query Port (`QUERYPORT`). Drydock automatically scans registered vessels and assigns the next collision-free pair in increments of 10:
+
+| Vessel # | Game Port (`PORT`, UDP) | Query Port (`QUERYPORT`, UDP) |
+|---|---|---|
+| Ship 1 | `7777` | `7778` |
+| Ship 2 | `7787` | `7788` |
+| Ship 3 | `7797` | `7798` |
+
+Matchmaking connection uses either:
+- **Invite Code (`INVITE_CODE`)**: Auto-generated 8-character code patched into `ServerDescription.json` and copyable in 1 click from Harbor or Bridge.
+- **Direct Connection (`USE_DIRECT_CONNECTION=true`)**: Connects via `<host-ip>:<DIRECT_CONNECTION_SERVER_PORT>` over UDP.
+
+---
+
+## 4. Environment Variables Reference
+
+### Hub Control Plane Env Vars
+- `KRAKEN_FLEET_ROOT` (default `./fleet`): Directory storing `fleet.json` and vessel stacks.
+- `KRAKEN_TEMPLATE` (default `..`): Directory holding the template `docker-compose.yml`.
+- `PORT` (default `8783`): Web dashboard listening port.
+- `HOST` (default `0.0.0.0`): Web dashboard bind address.
+- `KRAKEN_SYSTEMD_UNIT` (optional): Systemd unit name (e.g. `kraken-hub`) for 1-click self-update respawns.
+- `KRAKEN_ENGINE` (`docker` | `native`): Force Native Win32 process supervision.
+- `KRAKEN_DEMO` (`1` | `true`): Enable interactive demo sandbox mode.
+
+### Per-Ship `.env` Variables
+- `IMAGE_REPOSITORY`: `ghcr.io/uberdudepl/windrose-dedicated-server-docker`
+- `IMAGE_TAG`: `v1.6.6` (default)
+- `WINDROSE_APP_ID`: `4129620`
+- `WINEDLLOVERRIDES`: `dwmapi=n,b` (required for headless UE4SS injection under Wine)
+- `SERVER_NAME`, `SERVER_NOTE`, `SERVER_PASSWORD`, `MAX_PLAYERS`, `INVITE_CODE`
+- `USER_SELECTED_REGION`: `""` (auto) | `EU` | `SEA` | `CIS`
+- `USE_DIRECT_CONNECTION`: `false` | `true`
+- `DISCORD_WEBHOOK_URL`, `GOTIFY_URL`, `GOTIFY_TOKEN`: Boot and event notifications.
+
+---
+
+## 5. Rigging Mod Manager & Dual-Sync Specification
+
+Kraken supports both UE4SS scripts/native DLLs and Unreal Engine pak mods:
+- **UE4SS Zip / Loose `.lua` / `.dll`**: Installed to `data/R5/Binaries/Win64/ue4ss/Mods/<ModName>/`. Native DLL mods automatically receive an `enabled.txt` sentinel file.
+- **Unreal `.pak` / `.ucas` / `.utoc`**: Placed in `data/R5/Content/Paks/~mods/` (asset mods) or `data/R5/Content/Paks/LogicMods/` (Blueprint logic mods loaded by `BPModLoaderMod`).
+- **Dual Registry Lockstep**: Writes both `mods.json` (authoritative JSON array for UE4SS 3.x) and CRLF `mods.txt` with `Keybinds : 1` anchored at the bottom under `; Built-in keybinds, do not move up!`.
+- **WindrosePlus Safety**: Auto-detects `data/windrose_plus_data/` and never overwrites `UE4SS-settings.ini` (`HookProcessInternal=1`, `HookEngineTick=0`, `DefaultExecuteInGameThreadMethod=ProcessEvent`).
+
+---
+
+## 6. Voyage Difficulty Studio (RocksDB Save Safety)
+
+Difficulty parameters in `data/R5/Saved/SaveProfiles/Default/RocksDB_v2/*/Worlds/<IslandId>/WorldDescription.json` (and legacy `Saved/SaveGames/` fallback) are exposed with official presets (`Easy`, `Medium`, `Hard`, `Custom`):
+- `WDS.Parameter.MobHealthMultiplier` (`0.2` – `5.0`)
+- `WDS.Parameter.MobDamageMultiplier` (`0.2` – `5.0`)
+- `WDS.Parameter.ShipsHealthMultiplier` (`0.4` – `5.0`)
+- `WDS.Parameter.ShipsDamageMultiplier` (`0.2` – `2.5`)
+- `WDS.Parameter.BoardingDifficultyMultiplier` (`0.2` – `5.0`)
+- `WDS.Parameter.Coop.StatsCorrectionModifier` (`0.0` – `2.0`)
+- `WDS.Parameter.Coop.ShipStatsCorrectionModifier` (`0.0` – `2.0`)
+- `WDS.Parameter.Coop.SharedQuests` (`true` | `false`)
+- `WDS.Parameter.EasyExplore` (`true` | `false`)
+
+All Voyage writes are blocked in UI and API while the target vessel is running to prevent RocksDB periodic save flushes from clobbering edits.
+
+---
+
+## 7. Security & REST API
+
+- **Authentication**: Optional scrypt-hashed 4–12 digit PIN gate (`POST /api/auth/configure`) with HMAC-signed HTTP-only cookies and exponential rate limiting (5 failed attempts triggers a 15-minute IP lockout).
+- **Fleet Endpoints**: `GET/POST /api/fleet`, `GET/POST /api/fleet/:id` (`start`, `stop`, `restart`, `pull`, `refit`, `backup`, `restore`, `update_env`, `scuttle`), `GET/POST /api/fleet/:id/mods`, `POST /api/fleet/:id/mods/:name`, `GET/POST /api/fleet/:id/voyage`, `GET /api/fleet/:id/logs`, `GET /api/fleet/:id/backups/:filename`, `GET/POST /api/system`.
